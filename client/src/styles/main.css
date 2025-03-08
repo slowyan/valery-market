@@ -1,0 +1,247 @@
+ /* open-sans-500 - cyrillic_latin */
+@font-face {
+    font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+    font-family: 'Open Sans';
+    font-style: normal;
+    font-weight: 500;
+    src: url('../fonts/open-sans-v40-cyrillic_latin-500.woff2') format('woff2'); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+}
+  /* open-sans-700 - cyrillic_latin */
+@font-face {
+    font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+    font-family: 'Open Sans';
+    font-style: normal;
+    font-weight: 700;
+    src: url('../fonts/open-sans-v40-cyrillic_latin-700.woff2') format('woff2'); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+}
+
+html {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: "Open Sans";
+    padding-top: 14.6vh;
+}
+
+*, *::before *::after {
+    box-sizing: inherit;
+}
+
+header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 10;
+    background-color: white;
+    opacity: 97%;
+}
+
+.head {
+    position: relative;
+    height: 14.6vh;
+    margin: 0px 70px;
+}
+
+.top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 100%;
+}
+
+.bottom-row {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    height: 100%;
+    display: flex;
+    align-items: center;
+}
+
+
+nav {
+    position: static;
+    left: auto;
+    transform: none;
+}
+
+ul {
+    list-style: none;
+}
+
+.head ul {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    gap: 35px;
+}
+
+
+    li a.navlinks:hover {
+        opacity: 62%;
+    }
+
+    .logo {
+        font-size: 30px;
+        opacity: 89%;
+    }
+
+    .navlinks {
+        text-decoration: none;
+        font-size: 20px;
+        color: black;
+    }
+
+    .auth {
+        margin-left: auto;
+        font-size: 20px;
+        background-color: #96CCFF;
+        border: 0px;
+        border-radius: 4px;
+        padding: 1px 12px;
+        display: flex;
+        align-items: center;
+        right: 100%;
+
+    }
+
+    .auth img {
+        height: 26px;
+        width: 26px;
+        margin-left: 6px;
+    }
+
+    .auth:hover {
+        opacity: 86%;
+    }
+main {
+    margin-top: 94px;
+}
+
+.foot {
+    display: flex;
+    padding: 40px 70px;
+    justify-content: space-between;
+    font-size: 20px;
+    line-height: 27px;
+    background: rgba(0, 0, 0, 0.05);
+}
+
+ul.dropdown {
+    display:block;
+    visibility: hidden; /* Скрываем по умолчанию */
+    opacity: 0; /* Непрозрачность 0 для скрытия */
+    transition: opacity 0.3s ease; /* Плавный переход */
+    position: absolute; /* Позиционируем относительно родителя */
+    background: linear-gradient(180deg, #FFFFFF 30%, #B4DDFE);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* Тень для выпадающего меню */
+    border-radius: 20px;
+}
+
+.dropdown li {
+    padding: 5px 0;
+    margin: 0 5px;
+}
+
+.navlinks:hover + .dropdown,
+.dropdown:hover {
+    visibility: visible; /* Показываем меню при наведении на родительский элемент или само меню */
+    opacity: 1; /* Устанавливаем непрозрачность 1 для показа */
+}
+
+@media (max-width: 576px) {
+    .head {
+        display: flex;
+        flex-direction: column;
+        height: auto;
+        margin: 0;
+        padding: 15px 8px;
+    }
+
+    .top-row {
+        display: flex;
+        align-items: center;
+        width: 100%;
+    }
+    
+    .bottom-row {
+        display: flex;
+        justify-content: center;
+        width: 100%;
+        transform: none;
+        position: static;
+    }
+
+    nav {
+        width: 100%;
+    }
+
+    .head ul {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        gap: 10px;
+        margin: 0;
+        margin-top: 10px;
+        padding: 0;
+    }
+
+    .logo {
+        display: block;
+        font-size: 30px;
+    }
+
+    .navlinks {
+        font-size: 14px;
+    }
+    ul.dropdown {
+        display:block;
+    }
+
+    .auth {
+        font-size: 16px;
+        margin-right: 0;
+    }
+    .auth img {
+        height: 20px;
+        width: 20px;
+        margin-left: 6px;
+    }
+    .dropdown {
+        display: block;
+        position: static;
+        opacity: 1;
+        visibility: visible;
+        box-shadow: none;
+        background: none;
+        width: 100%;
+        text-align: left;
+        margin-top: 5px;
+    }
+    
+    .dropdown li {
+        margin-left: 15px;
+        padding: 0;
+        margin-bottom: 5px;
+        position: relative; /* Для позиционирования псевдоэлемента */
+        padding-left: 10px; /* Отступ от полосы до текста */
+    }
+    
+    .dropdown li::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 2px; /* Толщина полосы */
+        height: 16px; /* Высота полосы (примерно высота текста) */
+        background-color: #96CCFF; /* Синеватый цвет */
+    }
+    
+    .dropdown li a.navlinks {
+        font-size: 16px;
+    }
+}

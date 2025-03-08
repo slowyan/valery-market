@@ -1,0 +1,58 @@
+body {
+	background: linear-gradient(to bottom, white 14.6vh, #ACD2F2);
+}
+
+main {
+	min-height: 85.4vh;
+	padding: 0 70px;
+}
+
+h1 {
+	font-weight: 700;
+	font-size: 30px;
+	text-align: center;
+	padding-top: 58px;
+	padding-bottom: 58px;
+}
+
+#current {
+	color: #96CCFF;
+}
+
+.products {
+	display: flex;
+	justify-content: space-around;
+}
+
+.product a {
+	text-decoration: none;
+}
+
+.img {
+	height: 295px;
+	width: 295px;
+	background-color: #0000000F;
+	border-top-left-radius: 20px;
+	border-top-right-radius: 20px;
+	margin-bottom: 17px;
+	box-shadow: 3px 4px 10px 0 rgba(0, 0, 0, 0.25);
+}
+
+.classname {
+	display: flex;
+	height: 96px;
+	width: 295px;
+	background-color: #0000000F;
+	vertical-align: middle;
+	border-bottom-left-radius: 20px;
+	border-bottom-right-radius: 20px;
+	box-shadow: 3px 4px 10px 0 rgba(0, 0, 0, 0.25);
+}
+
+.classname p {
+	margin: auto;
+	color: black;
+	text-align: center;
+	font-size: 25px;
+	line-height: 34px;
+}

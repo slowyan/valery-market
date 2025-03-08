@@ -1,0 +1,108 @@
+.image-container {
+        background-image:
+        linear-gradient(to top, rgba(255, 255, 255, 0), 83%, white),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0), 94%, white),
+        url("../images/main1.jpg");
+        background-size: 100% auto;
+        background-repeat: no-repeat;
+        height: 85.4vh;
+        width: 100%;
+        text-shadow: 0px 4px rgba(0,0,0,0.1);
+        text-align: center;
+    }
+
+body {
+    background:
+    linear-gradient(to bottom, rgba(255, 255, 255, 0) 100vh, #96CCFF);
+}
+
+.image-container h1{
+        color: #E0FFFF;
+        padding-top: 16vh;
+        font-size: 80px;
+}
+
+.image-container p{
+        color: #E0FFFF;
+        font-size: 30px;
+}
+
+.contact {
+    position: absolute;
+    bottom: 30px;
+    right: 70px;
+    padding-left: 20px;
+}
+
+article {
+    font-size: 24.5px;
+    line-height: 33.5px;
+}
+
+
+.about {
+    background: #E9EEF2;
+    padding: 34px 240px;
+}
+
+@media (max-width: 576px) {
+    .image-container {
+        background-image:
+        linear-gradient(to top, rgba(255, 255, 255, 0), 89%, rgba(255, 255, 255, 1)),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0) 61%, white),
+        url("../images/main.png");
+        background-size: contain;
+        background-repeat: no-repeat;
+        text-shadow: 0px 4px rgba(0,0,0,0.1);
+        width: 100%;
+        height: 26vh;
+        text-align: center;
+    }
+    .image-container h1 {
+        padding-top: 4%;
+        opacity: 0.96;
+        font-size: 30px;
+    }
+    .image-container p {
+        font-size: 15px;
+    }
+    .contact {
+        position: fixed;
+        bottom: 30px;
+        right: 20px; /* Обновлено для мобильных */
+        padding-left: 20px;
+    }
+
+    main {
+        margin-top: 0px;
+    }
+    article {
+        font-size: 16px;
+        line-height: 30px;
+    }
+    .about {
+        padding: 21px 37px;
+    }
+
+    /* Новые стили */
+    .foot {
+        flex-direction: column;
+        align-items: center;
+        padding: 20px;
+    }
+    .foot-info, .foot-nav {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    .dropdown {
+        display: block;
+        position: static;
+        opacity: 1;
+        visibility: visible;
+        box-shadow: none;
+        background: none;
+    }
+    .dropdown li {
+        margin-left: 20px;
+    }
+}
