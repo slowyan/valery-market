@@ -11,19 +11,32 @@ const app = express();
 
 // Middleware
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? ['http://22000e1ac334.vps.myjino.ru', 'https://22000e1ac334.vps.myjino.ru']
-    : ['http://localhost:3000'],
+  origin: '*',  // Разрешаем запросы со всех доменов
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
+
+// Логирование запросов
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.path}`, req.body);
+  next();
+});
 
 // Маршруты
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/orders', orderRoutes);
+
+// Обработка ошибок
+app.use((err, req, res, next) => {
+  console.error('Server Error:', err);
+  res.status(500).json({
+    success: false,
+    message: err.message || 'Внутренняя ошибка сервера'
+  });
+});
 
 // Подключение к MongoDB
 mongoose.connect(config.mongoUri)
