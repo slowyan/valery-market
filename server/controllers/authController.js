@@ -13,8 +13,11 @@ const generateVerificationCode = () => {
 const sendCode = async (req, res) => {
     try {
         const { phone } = req.body;
+        
+        console.log('Получен запрос на отправку кода:', { phone });
 
         if (!phone || !/^7\d{10}$/.test(phone)) {
+            console.log('Неверный формат номера:', phone);
             return res.status(400).json({
                 success: false,
                 message: 'Неверный формат номера телефона'
@@ -23,9 +26,15 @@ const sendCode = async (req, res) => {
 
         // Генерируем код
         const code = generateVerificationCode();
+        console.log('Сгенерирован код:', code);
         
         // Отправляем SMS через наш сервис
-        await smsService.sendVerificationCode(phone, code);
+        const smsResult = await smsService.sendVerificationCode(phone, code);
+        console.log('Результат отправки SMS:', smsResult);
+        
+        if (!smsResult) {
+            throw new Error('Не удалось отправить SMS');
+        }
         
         // Сохраняем код
         verificationCodes.set(phone, {
@@ -33,6 +42,7 @@ const sendCode = async (req, res) => {
             timestamp: Date.now(),
             attempts: 0
         });
+        console.log('Код сохранен в памяти');
 
         res.json({
             success: true,
@@ -42,7 +52,7 @@ const sendCode = async (req, res) => {
         console.error('Ошибка при отправке кода:', error);
         res.status(500).json({
             success: false,
-            message: 'Ошибка при отправке кода'
+            message: error.message || 'Ошибка при отправке кода'
         });
     }
 };
