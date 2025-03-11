@@ -5,35 +5,70 @@ const jwt = require('jsonwebtoken');
 // Создание нового заказа
 exports.createOrder = async (req, res) => {
   try {
-    const { items, shippingAddress, contactPhone } = req.body;
+    console.log('Получен запрос на создание заказа:', req.body);
+    
+    const { items, shippingAddress, contactPhone, totalAmount } = req.body;
+
+    // Проверяем наличие всех необходимых полей
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Корзина пуста или неверный формат данных'
+      });
+    }
+
+    if (!shippingAddress || !contactPhone) {
+      return res.status(400).json({
+        success: false,
+        message: 'Не указан адрес доставки или контактный телефон'
+      });
+    }
+
+    // Проверяем адрес доставки
+    const { city, street, house, postalCode } = shippingAddress;
+    if (!city || !street || !house || !postalCode) {
+      return res.status(400).json({
+        success: false,
+        message: 'Не все поля адреса доставки заполнены'
+      });
+    }
 
     // Проверяем авторизацию
     let userId = null;
     const authHeader = req.headers.authorization;
     if (authHeader) {
-      const token = authHeader.split(' ')[1];
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      userId = decoded.userId;
+      try {
+        const token = authHeader.split(' ')[1];
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        userId = decoded.userId;
+      } catch (error) {
+        console.log('Ошибка при проверке токена:', error);
+      }
     }
 
-    // Вычисляем общую сумму заказа
-    const totalAmount = items.reduce((total, item) => {
-      const price = item.discount
-        ? Math.round(item.price * (1 - item.discount / 100))
-        : item.price;
-      return total + price * item.quantity;
-    }, 0);
+    // Проверяем и форматируем items
+    const formattedItems = items.map(item => ({
+      productId: item.productId || item.id,
+      name: item.name,
+      price: item.price,
+      quantity: item.quantity,
+      discount: item.discount || 0
+    }));
 
+    // Создаем заказ
     const order = new Order({
       userId,
-      items,
+      items: formattedItems,
       totalAmount,
       shippingAddress,
       contactPhone,
       status: 'pending'
     });
 
+    console.log('Создаем заказ:', order);
+
     await order.save();
+    console.log('Заказ успешно сохранен');
 
     res.status(201).json({
       success: true,
@@ -43,7 +78,7 @@ exports.createOrder = async (req, res) => {
     console.error('Ошибка при создании заказа:', error);
     res.status(500).json({
       success: false,
-      message: 'Ошибка при создании заказа'
+      message: error.message || 'Ошибка при создании заказа'
     });
   }
 };
