@@ -1,57 +1,91 @@
-import React from 'react';
-import { Link as RouterLink } from 'react-router-dom';
-import {
-  AppBar,
-  Toolbar,
-  Typography,
-  Button,
-  IconButton,
-  Badge,
-  Box,
-} from '@mui/material';
-import { ShoppingCart, Person } from '@mui/icons-material';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import logoImage from '../images/logo.png';
+import AuthModal from './AuthModal';
+import '../styles/main.css';
 
 const Header = () => {
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const navigate = useNavigate();
+  const token = localStorage.getItem('token');
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      // Проверяем валидность токена
+      fetch('http://localhost:5000/api/user/profile', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data && !data.error) {
+          localStorage.setItem('user', JSON.stringify(data));
+        } else {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+        }
+      })
+      .catch(() => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+      });
+    }
+  }, []);
+
+  const handleAuthClick = () => {
+    if (token) {
+      navigate('/profile');
+    } else {
+      setIsAuthModalOpen(true);
+    }
+  };
+
   return (
-    <AppBar position="static" sx={{ mb: 4 }}>
-      <Toolbar>
-        <Typography
-          variant="h6"
-          component={RouterLink}
-          to="/"
-          sx={{ flexGrow: 1, textDecoration: 'none', color: 'inherit' }}
-        >
-          Интернет-магазин
-        </Typography>
-        <Box>
-          <Button
-            color="inherit"
-            component={RouterLink}
-            to="/products"
-            sx={{ mr: 2 }}
-          >
-            Товары
-          </Button>
-          <IconButton
-            color="inherit"
-            component={RouterLink}
-            to="/cart"
-            sx={{ mr: 2 }}
-          >
-            <Badge badgeContent={0} color="secondary">
-              <ShoppingCart />
-            </Badge>
-          </IconButton>
-          <IconButton
-            color="inherit"
-            component={RouterLink}
-            to="/login"
-          >
-            <Person />
-          </IconButton>
-        </Box>
-      </Toolbar>
-    </AppBar>
+    <header>
+      <div className="head">
+        <div className="top-row">
+          <Link to="/" className="logo">
+            <img src={logoImage} alt="Logo" className="logo-image" />
+          </Link>
+          <button className="auth" onClick={handleAuthClick}>
+            {token ? 'Профиль' : 'Войти'}
+            <img src="/person.svg" alt="person" />
+          </button>
+        </div>
+        <div className="bottom-row">
+          <nav>
+            <ul>
+              <li>
+                <Link to="/catalog" className="navlinks">Каталог</Link>
+              </li>
+              <li className="menu-container">
+                <a href="#" className="navlinks">Наши услуги <span className="arrow">▼</span></a>
+                <ul className="dropdown">
+                  <li><a href="#" className="navlinks">Оштукатуривание</a></li>
+                  <li><a href="#" className="navlinks">Укладка мозаики</a></li>
+                  <li><a href="#" className="navlinks">Сварка плёнки</a></li>
+                  <li><a href="#" className="navlinks">Гидроизоляция</a></li>
+                  <li><a href="#" className="navlinks">Установка закладных</a></li>
+                  <li><a href="#" className="navlinks">Монтаж оборудования</a></li>
+                  <li><a href="#" className="navlinks">Переливные лотки</a></li>
+                  <li><a href="#" className="navlinks">Обслуживание</a></li>
+                  <li><a href="#" className="navlinks">Реконструкция</a></li>
+                  <li><a href="#" className="navlinks">Ремонт</a></li>
+                </ul>
+              </li>
+              <li><Link to="/portfolio" className="navlinks">Наши работы</Link></li>
+              <li><Link to="/contract" className="navlinks">Договор</Link></li>
+            </ul>
+          </nav>
+        </div>
+      </div>
+      <AuthModal 
+        isOpen={isAuthModalOpen} 
+        onClose={() => setIsAuthModalOpen(false)} 
+      />
+    </header>
   );
 };
 

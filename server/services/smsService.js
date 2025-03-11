@@ -1,24 +1,16 @@
 const axios = require('axios');
+const config = require('../config');
 
 class SmsService {
   constructor() {
-    // Инициализация будет происходить позже
     this.baseUrl = 'https://sms.ru';
-  }
-
-  initialize() {
-    this.apiKey = process.env.SMS_RU_API_KEY;
-    console.log('SMS.RU API Key initialized:', this.apiKey);
+    this.apiKey = config.sms.apiKey;
   }
 
   async sendVerificationCode(phone, code) {
-    if (!this.apiKey) {
-      this.initialize();
-    }
-
     try {
       // В режиме разработки просто логируем код
-      if (process.env.NODE_ENV === 'development') {
+      if (!config.sms.enabled) {
         console.log('==================================');
         console.log('🔐 КОД ПОДТВЕРЖДЕНИЯ');
         console.log('📱 Телефон:', phone);
@@ -72,10 +64,6 @@ class SmsService {
   }
 
   async checkBalance() {
-    if (!this.apiKey) {
-      this.initialize();
-    }
-
     try {
       const url = `${this.baseUrl}/my/balance`;
       const response = await axios.get(url, {
@@ -106,8 +94,45 @@ class SmsService {
       };
     }
   }
+
+  async sendSms(phone, message) {
+    try {
+      if (config.sms.enabled) {
+        // Здесь будет реальная отправка SMS через провайдера
+        console.log('SMS отправлено через провайдера:', { phone, message });
+      } else {
+        // В режиме разработки просто выводим код в консоль
+        console.log('=================================');
+        console.log(`Код подтверждения для ${phone}:`);
+        console.log(message);
+        console.log('=================================');
+      }
+      return true;
+    } catch (error) {
+      console.error('Ошибка отправки SMS:', error);
+      return false;
+    }
+  }
+
+  async sendSMS(phone, message) {
+    try {
+      // В реальном приложении здесь был бы запрос к SMS-сервису
+      // Для тестирования просто логируем сообщение
+      console.log('SMS Service:', {
+        to: phone,
+        message: message,
+        timestamp: new Date().toISOString()
+      });
+
+      return {
+        success: true,
+        messageId: Math.random().toString(36).substring(7)
+      };
+    } catch (error) {
+      console.error('SMS Service Error:', error);
+      throw new Error('Failed to send SMS');
+    }
+  }
 }
 
-const smsService = new SmsService();
-
-module.exports = smsService; 
+module.exports = new SmsService(); 

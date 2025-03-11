@@ -1,0 +1,74 @@
+.header {
+    background: #FFFFFF;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 16px 0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+}
+
+.header-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    font-size: 24px;
+    font-weight: bold;
+    color: #333;
+    cursor: pointer;
+}
+
+.nav-menu {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+}
+
+.auth-button, .logout-button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.auth-button {
+    background: #99CCFF;
+    color: #000;
+}
+
+.auth-button:hover {
+    background: #7FBFFF;
+}
+
+.logout-button {
+    background: #F0F0F0;
+    color: #666;
+}
+
+.logout-button:hover {
+    background: #E0E0E0;
+}
+
+@media (max-width: 576px) {
+    .header-content {
+        padding: 0 10px;
+    }
+
+    .logo {
+        font-size: 20px;
+    }
+
+    .auth-button, .logout-button {
+        padding: 6px 12px;
+        font-size: 14px;
+    }
+} 

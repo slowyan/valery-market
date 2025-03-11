@@ -1,21 +1,24 @@
 {
-  "name": "ecommerce-server",
+  "name": "valery-market-server",
   "version": "1.0.0",
-  "description": "Backend for ecommerce application",
+  "description": "Server for Valery Market",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "dev": "nodemon index.js"
+    "dev": "cross-env NODE_ENV=development nodemon index.js",
+    "prod": "cross-env NODE_ENV=production node index.js"
   },
   "dependencies": {
-    "express": "^4.18.2",
-    "mongoose": "^7.0.0",
+    "axios": "^1.6.2",
+    "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
-    "dotenv": "^16.0.3",
-    "jsonwebtoken": "^9.0.0",
-    "bcryptjs": "^2.4.3"
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.0.3"
   },
   "devDependencies": {
-    "nodemon": "^2.0.22"
+    "cross-env": "^7.0.3",
+    "nodemon": "^3.0.2"
   }
-} 
+}

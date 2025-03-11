@@ -1,16 +1,17 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { Container, CssBaseline, ThemeProvider, createTheme } from '@mui/material';
-
-// Компоненты
+import { Box, CssBaseline, ThemeProvider, createTheme } from '@mui/material';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import Home from './pages/Home';
-import ProductList from './pages/ProductList';
-import ProductDetails from './pages/ProductDetails';
-import Cart from './pages/Cart';
-import Login from './pages/Login';
-import Register from './pages/Register';
+import Profile from './pages/Profile';
+import ProtectedRoute from './components/ProtectedRoute';
+import Catalog from './components/Catalog';
+import Checkout from './pages/Checkout';
+import OrderSuccess from './pages/OrderSuccess';
+import AdminPanel from './components/AdminPanel';
+import AdminLogin from './components/AdminLogin';
+import './styles/main.css';
 
 const theme = createTheme({
   palette: {
@@ -21,6 +22,17 @@ const theme = createTheme({
       main: '#dc004e',
     },
   },
+  typography: {
+    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+    h1: {
+      fontSize: '3.5rem',
+      fontWeight: 700,
+    },
+    h5: {
+      fontSize: '1.5rem',
+      fontWeight: 500,
+    },
+  },
 });
 
 function App() {
@@ -28,18 +40,34 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Router>
-        <Header />
-        <Container>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/products" element={<ProductList />} />
-            <Route path="/product/:id" element={<ProductDetails />} />
-            <Route path="/cart" element={<Cart />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-          </Routes>
-        </Container>
-        <Footer />
+        <div className="App">
+          <Header />
+          <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+            <Box component="main" sx={{ flexGrow: 1 }}>
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/catalog" element={<Catalog />} />
+                <Route path="/checkout" element={<Checkout />} />
+                <Route path="/order-success" element={<OrderSuccess />} />
+                <Route 
+                  path="/profile" 
+                  element={
+                    <ProtectedRoute>
+                      <Profile />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route path="/admin/login" element={<AdminLogin />} />
+                <Route path="/admin/*" element={
+                  <ProtectedRoute adminRequired={true}>
+                    <AdminPanel />
+                  </ProtectedRoute>
+                } />
+              </Routes>
+            </Box>
+            <Footer />
+          </Box>
+        </div>
       </Router>
     </ThemeProvider>
   );

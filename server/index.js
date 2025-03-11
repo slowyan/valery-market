@@ -1,9 +1,11 @@
+require('dotenv').config();
 const express = require('express');
+const mongoose = require('mongoose');
 const cors = require('cors');
-const dotenv = require('dotenv');
-const path = require('path');
-
-dotenv.config();
+const config = require('./config');
+const authRoutes = require('./routes/auth');
+const userRoutes = require('./routes/user');
+const orderRoutes = require('./routes/orderRoutes');
 
 const app = express();
 
@@ -11,40 +13,18 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Настройки для production
-if (process.env.NODE_ENV === 'production') {
-  // Разрешаем запросы только с нашего домена
-  app.use(cors({
-    origin: process.env.CLIENT_URL
-  }));
-  
-  // Устанавливаем заголовки безопасности
-  app.use((req, res, next) => {
-    res.setHeader('X-Content-Type-Options', 'nosniff');
-    res.setHeader('X-Frame-Options', 'DENY');
-    res.setHeader('X-XSS-Protection', '1; mode=block');
-    next();
-  });
+// Маршруты
+app.use('/api/auth', authRoutes);
+app.use('/api/user', userRoutes);
+app.use('/api/orders', orderRoutes);
 
-  // Serve static files
-  app.use(express.static(path.join(__dirname, '../client/build')));
-}
+// Подключение к MongoDB
+mongoose.connect(config.mongoUri)
+    .then(() => console.log('Connected to MongoDB'))
+    .catch(err => console.error('MongoDB connection error:', err));
 
-// Routes
-app.get('/api/health', (req, res) => {
-  res.send('API работает');
-});
-
-// Для production: все неопределенные маршруты направляем на React приложение
-if (process.env.NODE_ENV === 'production') {
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../client/build', 'index.html'));
-  });
-}
-
-// Определение порта (Jino использует системную переменную PORT)
-const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, () => {
-  console.log(`Сервер запущен на порту ${PORT}`);
+// Запуск сервера
+app.listen(config.port, () => {
+    console.log(`Server is running on port ${config.port}`);
+    console.log('Environment:', process.env.NODE_ENV);
 }); 

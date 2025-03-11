@@ -1,0 +1,129 @@
+.profile-container {
+    padding: 40px 20px;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.profile-card {
+    background: #FFFFFF;
+    border-radius: 16px;
+    padding: 30px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.profile-card h1 {
+    margin: 0 0 30px;
+    font-size: 28px;
+    font-weight: normal;
+    color: #333;
+    text-align: center;
+}
+
+.profile-info {
+    margin-bottom: 20px;
+}
+
+.info-group, .form-group {
+    margin-bottom: 20px;
+}
+
+.info-group label, .form-group label {
+    display: block;
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 8px;
+}
+
+.info-group p {
+    font-size: 16px;
+    color: #333;
+    margin: 0;
+    padding: 8px 0;
+}
+
+.profile-form input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #E0E0E0;
+    border-radius: 8px;
+    font-size: 16px;
+    color: #333;
+    background: #F5F5F5;
+    transition: all 0.3s ease;
+}
+
+.profile-form input:focus {
+    outline: none;
+    border-color: #99CCFF;
+    background: #FFFFFF;
+}
+
+.profile-form input:disabled {
+    background: #F0F0F0;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.button-group {
+    display: flex;
+    gap: 16px;
+    margin-top: 24px;
+}
+
+.profile-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 24px;
+}
+
+.edit-button, .save-button, .cancel-button, .logout-button {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 100%;
+}
+
+.edit-button, .save-button {
+    background: #99CCFF;
+    color: #000;
+}
+
+.edit-button:hover, .save-button:hover {
+    background: #7FBFFF;
+}
+
+.cancel-button {
+    background: #F0F0F0;
+    color: #666;
+}
+
+.cancel-button:hover {
+    background: #E0E0E0;
+}
+
+.logout-button {
+    background: #FFE5E5;
+    color: #FF4444;
+}
+
+.logout-button:hover {
+    background: #FFD6D6;
+}
+
+@media (max-width: 576px) {
+    .profile-container {
+        padding: 20px 10px;
+    }
+
+    .profile-card {
+        padding: 20px;
+    }
+
+    .button-group {
+        flex-direction: column;
+    }
+} 
