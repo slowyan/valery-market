@@ -6,7 +6,7 @@ module.exports = {
     jwtSecret: process.env.JWT_SECRET || 'your-secret-key',
     // Добавьте здесь конфигурацию для SMS-сервиса
     sms: {
-        enabled: process.env.NODE_ENV !== 'development',
+        enabled: true,
         provider: 'sms.ru',
         apiKey: process.env.SMS_RU_API_KEY
     }

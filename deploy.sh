@@ -9,20 +9,30 @@ cd /var/www/valery-market
 # Обновление кода из репозитория
 git pull origin main
 
-# Установка зависимостей
-cd client && npm install --production
-cd ../server && npm install --production
+# Переходим в директорию клиента
+cd client
 
-# Сборка клиентской части
-cd ../client
+# Устанавливаем зависимости и собираем проект
+echo "Installing client dependencies..."
+npm install
+echo "Building client..."
 npm run build
 
-# Запуск приложения через PM2
-cd ..
-pm2 start ecosystem.config.js --env production
+# Переходим в директорию сервера
+cd ../server
 
-# Сохранение конфигурации PM2
+# Устанавливаем зависимости сервера
+echo "Installing server dependencies..."
+npm install
+
+# Запускаем приложение через PM2
+echo "Starting application with PM2..."
+pm2 start ecosystem.config.js
+
+# Сохраняем конфигурацию PM2
 pm2 save
+
+echo "Deployment completed!"
 
 # Проверка статуса
 pm2 status 

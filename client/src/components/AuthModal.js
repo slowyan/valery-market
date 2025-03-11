@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
+import config from '../config';
 import '../styles/AuthModal.css';
 
-const API_URL = 'http://localhost:5000/api'; // Замените на ваш базовый URL API
+const API_URL = config.API_URL;
 
 const AuthModal = ({ isOpen, onClose }) => {
     const [phone, setPhone] = useState('');

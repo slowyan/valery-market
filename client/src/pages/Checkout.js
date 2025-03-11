@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import '../styles/checkout.css';
+import config from '../config';
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -61,7 +62,7 @@ const Checkout = () => {
 
       // Отправляем заказ на сервер
       const response = await axios.post(
-        'http://localhost:5000/api/orders',
+        `${config.API_URL}/orders`,
         orderData
       );
 
@@ -69,7 +70,7 @@ const Checkout = () => {
         // Проверяем, что заказ действительно создан
         const orderId = response.data.order._id;
         const verifyResponse = await axios.get(
-          `http://localhost:5000/api/orders/${orderId}`
+          `${config.API_URL}/orders/${orderId}`
         );
 
         if (verifyResponse.data.success) {

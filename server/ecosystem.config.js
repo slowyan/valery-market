@@ -1,6 +1,6 @@
 module.exports = {
   apps: [{
-    name: 'ecommerce-app',
+    name: 'valery-market-server',
     script: 'index.js',
     instances: 1,
     autorestart: true,
@@ -8,7 +8,7 @@ module.exports = {
     max_memory_restart: '1G',
     env: {
       NODE_ENV: 'production',
-      PORT: 3000
+      PORT: 5000
     }
   }]
 }; 
