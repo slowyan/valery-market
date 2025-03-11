@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import config from '../config';
 import '../styles/CheckoutForm.css';
 
 const CheckoutForm = ({ items, onSuccess, onCancel }) => {
@@ -53,7 +54,7 @@ const CheckoutForm = ({ items, onSuccess, onCancel }) => {
       };
 
       const response = await axios.post(
-        'http://localhost:5000/api/orders',
+        `${config.API_URL}/orders`,
         orderData
       );
 
