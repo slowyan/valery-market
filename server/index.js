@@ -1,4 +1,9 @@
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({
+  path: process.env.NODE_ENV === 'development' 
+    ? path.join(__dirname, '.env.development')
+    : path.join(__dirname, '.env')
+});
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');

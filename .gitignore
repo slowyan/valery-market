@@ -4,6 +4,7 @@ package-lock.json
 
 # Environment
 .env
+env.development
 .env.local
 .env.*.local
 
@@ -30,6 +31,3 @@ uploads/*
 !uploads/.gitkeep
 
 # Vercel
-.vercel
-.next
-vercel.json 
