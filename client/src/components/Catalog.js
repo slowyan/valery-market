@@ -4,6 +4,8 @@ import ProductCard from './ProductCard';
 import Cart from './Cart';
 import CheckoutForm from './CheckoutForm';
 import '../styles/catalog.css';
+import axios from 'axios';
+import config from '../config';
 
 // Примерные данные для тестирования
 const sampleCategories = [
@@ -100,13 +102,61 @@ const Catalog = () => {
     localStorage.setItem('cart', JSON.stringify(cartItems));
   }, [cartItems]);
 
-  // Фильтрация и сортировка товаров
+  // Загрузка товаров с сервера
   useEffect(() => {
-    let filteredProducts = selectedCategory
-      ? sampleProducts.filter(p => p.category === selectedCategory)
-      : sampleProducts;
+    const fetchProducts = async () => {
+      try {
+        setLoading(true);
+        let url = `${config.apiUrl}/products`;
+        
+        // Если выбрана категория, используем API для фильтрации по категории
+        if (selectedCategory) {
+          url = `${config.apiUrl}/products/category/${selectedCategory}`;
+          
+          // Добавляем параметры фильтрации и сортировки
+          const params = new URLSearchParams();
+          if (filters.search) params.append('search', filters.search);
+          if (filters.minPrice) params.append('minPrice', filters.minPrice);
+          if (filters.maxPrice) params.append('maxPrice', filters.maxPrice);
+          if (filters.sort) params.append('sort', filters.sort);
+          
+          if (params.toString()) {
+            url += `?${params.toString()}`;
+          }
+        }
+        
+        const response = await axios.get(url);
+        if (response.data.success) {
+          setProducts(response.data.products);
+          setError(null);
+        } else {
+          setError('Не удалось загрузить товары');
+        }
+      } catch (err) {
+        console.error('Ошибка при загрузке товаров:', err);
+        setError('Не удалось загрузить товары');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    // Поиск по названию
+    fetchProducts();
+  }, [selectedCategory, filters]); // Добавляем зависимости для обновления при изменении фильтров
+
+  // Фильтрация и сортировка товаров
+  const getFilteredProducts = () => {
+    if (!Array.isArray(products)) {
+      return [];
+    }
+
+    // Если используем API для фильтрации, возвращаем продукты как есть
+    if (selectedCategory) {
+      return products;
+    }
+
+    let filteredProducts = [...products];
+
+    // Поиск по названию только если не используем API фильтрации
     if (filters.search) {
       const searchLower = filters.search.toLowerCase();
       filteredProducts = filteredProducts.filter(p =>
@@ -115,7 +165,7 @@ const Catalog = () => {
       );
     }
 
-    // Фильтрация по цене
+    // Фильтрация по цене только если не используем API фильтрации
     if (filters.minPrice) {
       filteredProducts = filteredProducts.filter(p => p.price >= Number(filters.minPrice));
     }
@@ -123,28 +173,30 @@ const Catalog = () => {
       filteredProducts = filteredProducts.filter(p => p.price <= Number(filters.maxPrice));
     }
 
-    // Сортировка
+    // Сортировка только если не используем API фильтрации
     if (filters.sort) {
+      const sortedProducts = [...filteredProducts];
       switch (filters.sort) {
         case 'price_asc':
-          filteredProducts.sort((a, b) => a.price - b.price);
+          sortedProducts.sort((a, b) => a.price - b.price);
           break;
         case 'price_desc':
-          filteredProducts.sort((a, b) => b.price - a.price);
+          sortedProducts.sort((a, b) => b.price - a.price);
           break;
         case 'name_asc':
-          filteredProducts.sort((a, b) => a.name.localeCompare(b.name));
+          sortedProducts.sort((a, b) => a.name.localeCompare(b.name));
           break;
         case 'name_desc':
-          filteredProducts.sort((a, b) => b.name.localeCompare(a.name));
+          sortedProducts.sort((a, b) => b.name.localeCompare(a.name));
           break;
         default:
           break;
       }
+      return sortedProducts;
     }
 
-    setProducts(filteredProducts);
-  }, [selectedCategory, filters]);
+    return filteredProducts;
+  };
 
   const handleAddToCart = (product) => {
     setCartItems(prev => {
@@ -261,7 +313,7 @@ const Catalog = () => {
         </div>
       ) : (
         <div className="products-grid">
-          {products.map(product => (
+          {getFilteredProducts().map(product => (
             <ProductCard
               key={product.id}
               product={product}

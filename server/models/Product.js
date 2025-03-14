@@ -24,10 +24,9 @@ const productSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  inStock: {
-    type: Number,
-    default: 0,
-    min: 0
+  isAvailable: {
+    type: Boolean,
+    default: true
   },
   specifications: [{
     name: String,

@@ -62,7 +62,7 @@ const Checkout = () => {
 
       // Отправляем заказ на сервер
       const response = await axios.post(
-        `${config.API_URL}/orders`,
+        `${config.apiUrl}/orders`,
         orderData
       );
 
@@ -70,7 +70,7 @@ const Checkout = () => {
         // Проверяем, что заказ действительно создан
         const orderId = response.data.order._id;
         const verifyResponse = await axios.get(
-          `${config.API_URL}/orders/${orderId}`
+          `${config.apiUrl}/orders/${orderId}`
         );
 
         if (verifyResponse.data.success) {

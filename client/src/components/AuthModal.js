@@ -3,7 +3,7 @@ import axios from 'axios';
 import config from '../config';
 import '../styles/AuthModal.css';
 
-const API_URL = config.API_URL;
+const API_URL = config.apiUrl;
 
 const AuthModal = ({ isOpen, onClose }) => {
     const [phone, setPhone] = useState('');

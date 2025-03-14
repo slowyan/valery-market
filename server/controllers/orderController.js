@@ -43,17 +43,37 @@ exports.createOrder = async (req, res) => {
         userId = decoded.userId;
       } catch (error) {
         console.log('Ошибка при проверке токена:', error);
+        return res.status(401).json({
+          success: false,
+          message: 'Недействительный токен авторизации'
+        });
       }
     }
 
-    // Проверяем и форматируем items
-    const formattedItems = items.map(item => ({
-      productId: item.productId || item.id,
-      name: item.name,
-      price: item.price,
-      quantity: item.quantity,
-      discount: item.discount || 0
-    }));
+    // Загружаем и проверяем доступность товаров
+    const formattedItems = [];
+    for (const item of items) {
+      const product = await Product.findById(item.productId || item.id);
+      if (!product) {
+        return res.status(400).json({
+          success: false,
+          message: `Товар ${item.name} не найден`
+        });
+      }
+      if (!product.isAvailable) {
+        return res.status(400).json({
+          success: false,
+          message: `Товар ${product.name} недоступен для заказа`
+        });
+      }
+      formattedItems.push({
+        productId: product._id,
+        name: product.name,
+        price: product.price,
+        quantity: item.quantity,
+        discount: item.discount || 0
+      });
+    }
 
     // Создаем заказ
     const order = new Order({
@@ -197,30 +217,36 @@ exports.getOrderDetails = async (req, res) => {
 exports.cancelOrder = async (req, res) => {
   try {
     const { orderId } = req.params;
-    const userId = req.user.id;
+    const userId = req.user._id;
 
-    const order = await Order.findOne({ _id: orderId, user: userId });
+    const order = await Order.findOne({ _id: orderId, userId: userId });
 
     if (!order) {
-      return res.status(404).json({ message: 'Заказ не найден' });
+      return res.status(404).json({ 
+        success: false,
+        message: 'Заказ не найден' 
+      });
     }
 
     if (order.status !== 'pending') {
-      return res.status(400).json({ message: 'Заказ нельзя отменить' });
-    }
-
-    // Возвращаем товары на склад
-    for (const item of order.items) {
-      await Product.findByIdAndUpdate(item.product, {
-        $inc: { inStock: item.quantity }
+      return res.status(400).json({ 
+        success: false,
+        message: 'Заказ нельзя отменить' 
       });
     }
 
     order.status = 'cancelled';
     await order.save();
 
-    res.json(order);
+    res.json({
+      success: true,
+      order
+    });
   } catch (error) {
-    res.status(500).json({ message: 'Ошибка при отмене заказа' });
+    console.error('Ошибка при отмене заказа:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Ошибка при отмене заказа' 
+    });
   }
 }; 

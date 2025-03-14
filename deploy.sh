@@ -1,38 +1,28 @@
 #!/bin/bash
 
-# Остановка текущего приложения
-pm2 stop valery-market-server
+echo "Deploying Valery Market to production..."
 
-# Переход в директорию проекта
+# Переходим в директорию проекта
 cd /var/www/valery-market
 
-# Обновление кода из репозитория
+# Получаем последние изменения
 git pull origin main
 
-# Переходим в директорию клиента
-cd client
-
-# Устанавливаем зависимости и собираем проект
-echo "Installing client dependencies..."
-npm install
-echo "Building client..."
-npm run build
-
-# Переходим в директорию сервера
-cd ../server
-
 # Устанавливаем зависимости сервера
-echo "Installing server dependencies..."
-npm install
+cd server
+npm install --production
 
-# Запускаем приложение через PM2
-echo "Starting application with PM2..."
+# Перезапускаем PM2
+pm2 delete all
 pm2 start ecosystem.config.js
-
-# Сохраняем конфигурацию PM2
 pm2 save
 
-echo "Deployment completed!"
+# Устанавливаем зависимости клиента и собираем
+cd ../client
+npm install
+npm run build
 
-# Проверка статуса
-pm2 status 
+# Перезагружаем Nginx
+sudo systemctl reload nginx
+
+echo "Deployment completed!" 

@@ -234,10 +234,18 @@ const login = async (req, res) => {
 const adminLogin = async (req, res) => {
     try {
         const { email, password } = req.body;
+        console.log('Попытка входа администратора:', { email });
 
         // Находим пользователя
         const user = await User.findOne({ email });
+        console.log('Найден пользователь:', user ? { 
+            email: user.email, 
+            isAdmin: user.isAdmin,
+            hashedPassword: user.password.substring(0, 10) + '...' // Показываем только часть хэша
+        } : 'Пользователь не найден');
+
         if (!user || !user.isAdmin) {
+            console.log('Отказано в доступе: пользователь не найден или не является администратором');
             return res.status(401).json({
                 success: false,
                 message: 'Доступ запрещен'
@@ -245,33 +253,54 @@ const adminLogin = async (req, res) => {
         }
 
         // Проверяем пароль
-        const isMatch = await user.comparePassword(password);
-        if (!isMatch) {
+        console.log('Проверяем пароль...');
+        console.log('Введенный пароль:', password);
+        
+        // Пробуем оба метода проверки пароля
+        const isMatchBcrypt = await bcrypt.compare(password, user.password);
+        const isMatchMethod = await user.comparePassword(password);
+        
+        console.log('Результаты проверки пароля:', {
+            bcrypt: isMatchBcrypt,
+            method: isMatchMethod
+        });
+
+        if (!isMatchBcrypt) {
+            console.log('Отказано в доступе: неверный пароль');
             return res.status(401).json({
                 success: false,
                 message: 'Неверный email или пароль'
             });
         }
 
-        // Создаем специальный админский токен
+        console.log('Пароль верный, создаем токен...');
+
+        // Создаем токен
         const token = jwt.sign(
             { 
                 userId: user._id,
-                isAdmin: true 
+                isAdmin: user.isAdmin 
             },
-            process.env.JWT_SECRET,
-            { expiresIn: '8h' }
+            process.env.JWT_SECRET || 'dev-secret-key',
+            { expiresIn: '24h' }
         );
+
+        console.log('Токен создан, отправляем ответ...');
 
         res.json({
             success: true,
             token,
-            user: user.getPublicProfile()
+            user: {
+                _id: user._id,
+                email: user.email,
+                isAdmin: user.isAdmin
+            }
         });
     } catch (error) {
+        console.error('Ошибка при входе администратора:', error);
         res.status(500).json({
             success: false,
-            message: 'Ошибка при входе в админ-панель'
+            message: 'Ошибка при входе в систему'
         });
     }
 };

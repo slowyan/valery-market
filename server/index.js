@@ -11,17 +11,21 @@ const config = require('./config');
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/user');
 const orderRoutes = require('./routes/orderRoutes');
+const productRoutes = require('./routes/productRoutes');
 
 const app = express();
 
 // Middleware
 app.use(cors({
-  origin: '*',  // Разрешаем запросы со всех доменов
+  origin: ['http://22000e1ac334.vps.myjino.ru', 'https://22000e1ac334.vps.myjino.ru', 'http://localhost:3000'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
+
+// Статическая раздача файлов из директории uploads
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Логирование запросов
 app.use((req, res, next) => {
@@ -33,6 +37,7 @@ app.use((req, res, next) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/products', productRoutes);
 
 // Обработка ошибок
 app.use((err, req, res, next) => {
@@ -43,13 +48,55 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Подключение к MongoDB
-mongoose.connect(config.mongoUri)
-    .then(() => console.log('Connected to MongoDB'))
-    .catch(err => console.error('MongoDB connection error:', err));
+// Настройки MongoDB
+const mongooseOptions = {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  serverSelectionTimeoutMS: 5000,
+  socketTimeoutMS: 45000,
+  family: 4
+};
+
+// Подключение к MongoDB с обработкой ошибок и переподключением
+const connectDB = async () => {
+  try {
+    const conn = await mongoose.connect(config.mongoUri, mongooseOptions);
+    console.log('Connected to MongoDB:', conn.connection.host);
+  } catch (error) {
+    console.error('MongoDB connection error:', error);
+    // Попытка переподключения через 5 секунд
+    setTimeout(connectDB, 5000);
+  }
+};
+
+// Обработка ошибок MongoDB
+mongoose.connection.on('error', err => {
+  console.error('MongoDB error:', err);
+});
+
+mongoose.connection.on('disconnected', () => {
+  console.log('MongoDB disconnected. Attempting to reconnect...');
+  connectDB();
+});
+
+// Инициализация подключения к MongoDB
+connectDB();
 
 // Запуск сервера
-app.listen(config.port, () => {
-    console.log(`Server is running on port ${config.port}`);
-    console.log('Environment:', process.env.NODE_ENV);
+const server = app.listen(config.port, () => {
+  console.log(`Server is running on port ${config.port}`);
+  console.log('Environment:', process.env.NODE_ENV);
+  console.log('MongoDB URI:', config.mongoUri);
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received. Shutting down gracefully...');
+  server.close(() => {
+    console.log('Server closed. Disconnecting from MongoDB...');
+    mongoose.connection.close(false, () => {
+      console.log('MongoDB connection closed.');
+      process.exit(0);
+    });
+  });
 }); 

@@ -31,7 +31,7 @@ const CheckoutForm = ({ items, onSuccess, onCancel }) => {
     try {
       const orderData = {
         items: items.map(item => ({
-          productId: item.id,
+          productId: item._id,
           name: item.name,
           price: item.price,
           quantity: item.quantity,
@@ -54,7 +54,7 @@ const CheckoutForm = ({ items, onSuccess, onCancel }) => {
       };
 
       const response = await axios.post(
-        `${config.API_URL}/orders`,
+        `${config.apiUrl}/orders`,
         orderData
       );
 

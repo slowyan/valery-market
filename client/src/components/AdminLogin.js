@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import config from '../config';
 import '../styles/adminLogin.css';
 
 const AdminLogin = () => {
@@ -16,18 +17,28 @@ const AdminLogin = () => {
     setLoading(true);
 
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/admin/login', {
+      const url = `${config.apiUrl}/auth/admin/login`;
+      console.log('Отправка запроса на:', url);
+      const response = await axios.post(url, {
         email,
         password
       });
+
+      console.log('Ответ сервера:', response.data);
 
       if (response.data.success) {
         localStorage.setItem('adminToken', response.data.token);
         localStorage.setItem('user', JSON.stringify(response.data.user));
         navigate('/admin/dashboard');
+      } else {
+        setError(response.data.message || 'Неизвестная ошибка');
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Ошибка при входе в систему');
+      console.error('Ошибка при входе:', err.response?.data || err);
+      setError(
+        err.response?.data?.message || 
+        'Ошибка при входе в систему. Проверьте правильность введенных данных.'
+      );
     } finally {
       setLoading(false);
     }

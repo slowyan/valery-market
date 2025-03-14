@@ -19,7 +19,7 @@ const ProductList = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const { data } = await axios.get(`${config.API_URL}/products`);
+        const { data } = await axios.get(`${config.apiUrl}/products`);
         setProducts(data);
       } catch (error) {
         console.error('Ошибка при загрузке товаров:', error);
