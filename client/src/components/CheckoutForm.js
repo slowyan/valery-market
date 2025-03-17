@@ -5,12 +5,14 @@ import '../styles/CheckoutForm.css';
 
 const CheckoutForm = ({ items, onSuccess, onCancel }) => {
   const [formData, setFormData] = useState({
+    customerName: '',
+    email: '',
+    phone: '',
     city: '',
     street: '',
     house: '',
     apartment: '',
-    postalCode: '',
-    contactPhone: ''
+    postalCode: ''
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -30,21 +32,16 @@ const CheckoutForm = ({ items, onSuccess, onCancel }) => {
 
     try {
       const orderData = {
+        customerName: formData.customerName.trim(),
+        phone: formData.phone.trim(),
+        ...(formData.email && { email: formData.email.trim() }),
         items: items.map(item => ({
           productId: item._id,
-          name: item.name,
-          price: item.price,
           quantity: item.quantity,
-          discount: item.discount || 0
+          name: item.name,
+          price: item.price
         })),
-        shippingAddress: {
-          city: formData.city,
-          street: formData.street,
-          house: formData.house,
-          apartment: formData.apartment || '',
-          postalCode: formData.postalCode
-        },
-        contactPhone: formData.contactPhone,
+        address: `${formData.city}, ${formData.street}, д. ${formData.house}${formData.apartment ? `, кв. ${formData.apartment}` : ''}, ${formData.postalCode}`,
         totalAmount: items.reduce((sum, item) => {
           const price = item.discount 
             ? Math.round(item.price * (1 - item.discount / 100))
@@ -55,17 +52,22 @@ const CheckoutForm = ({ items, onSuccess, onCancel }) => {
 
       const response = await axios.post(
         `${config.apiUrl}/orders`,
-        orderData
+        orderData,
+        {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }
       );
 
-      if (response.data.success) {
-        onSuccess(response.data.order);
+      if (response.data) {
+        onSuccess(response.data);
       } else {
-        throw new Error(response.data.message || 'Ошибка при создании заказа');
+        throw new Error('Не удалось создать заказ');
       }
     } catch (err) {
       console.error('Ошибка при оформлении заказа:', err);
-      setError(err.response?.data?.message || err.message || 'Произошла ошибка при оформлении заказа');
+      setError(err.response?.data?.message || 'Произошла ошибка при оформлении заказа');
     } finally {
       setLoading(false);
     }
@@ -79,7 +81,7 @@ const CheckoutForm = ({ items, onSuccess, onCancel }) => {
         <div className="order-summary">
           <h3>Ваш заказ</h3>
           {items.map(item => (
-            <div key={item.id} className="order-item">
+            <div key={item._id} className="order-item">
               <span className="item-name">{item.name}</span>
               <span className="item-quantity">×{item.quantity}</span>
               <span className="item-price">
@@ -106,101 +108,109 @@ const CheckoutForm = ({ items, onSuccess, onCancel }) => {
         {error && <div className="error-message">{error}</div>}
 
         <form onSubmit={handleSubmit}>
-          <div className="form-section">
-            <h3>Адрес доставки</h3>
-            
+          <div className="form-group">
+            <label htmlFor="customerName">Имя*</label>
+            <input
+              type="text"
+              id="customerName"
+              name="customerName"
+              value={formData.customerName}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="email">Email</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="phone">Телефон*</label>
+            <input
+              type="tel"
+              id="phone"
+              name="phone"
+              value={formData.phone}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          <h3>Адрес доставки</h3>
+
+          <div className="form-group">
+            <label htmlFor="city">Город*</label>
+            <input
+              type="text"
+              id="city"
+              name="city"
+              value={formData.city}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="street">Улица*</label>
+            <input
+              type="text"
+              id="street"
+              name="street"
+              value={formData.street}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          <div className="form-row">
             <div className="form-group">
-              <label htmlFor="city">Город*</label>
+              <label htmlFor="house">Дом*</label>
               <input
                 type="text"
-                id="city"
-                name="city"
-                value={formData.city}
+                id="house"
+                name="house"
+                value={formData.house}
                 onChange={handleChange}
                 required
               />
             </div>
 
             <div className="form-group">
-              <label htmlFor="street">Улица*</label>
+              <label htmlFor="apartment">Квартира</label>
               <input
                 type="text"
-                id="street"
-                name="street"
-                value={formData.street}
+                id="apartment"
+                name="apartment"
+                value={formData.apartment}
                 onChange={handleChange}
-                required
-              />
-            </div>
-
-            <div className="form-row">
-              <div className="form-group">
-                <label htmlFor="house">Дом*</label>
-                <input
-                  type="text"
-                  id="house"
-                  name="house"
-                  value={formData.house}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="apartment">Квартира</label>
-                <input
-                  type="text"
-                  id="apartment"
-                  name="apartment"
-                  value={formData.apartment}
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="postalCode">Почтовый индекс*</label>
-              <input
-                type="text"
-                id="postalCode"
-                name="postalCode"
-                value={formData.postalCode}
-                onChange={handleChange}
-                required
               />
             </div>
           </div>
 
-          <div className="form-section">
-            <h3>Контактная информация</h3>
-            
-            <div className="form-group">
-              <label htmlFor="contactPhone">Телефон*</label>
-              <input
-                type="tel"
-                id="contactPhone"
-                name="contactPhone"
-                value={formData.contactPhone}
-                onChange={handleChange}
-                required
-              />
-            </div>
+          <div className="form-group">
+            <label htmlFor="postalCode">Индекс*</label>
+            <input
+              type="text"
+              id="postalCode"
+              name="postalCode"
+              value={formData.postalCode}
+              onChange={handleChange}
+              required
+            />
           </div>
 
           <div className="form-actions">
-            <button 
-              type="button" 
-              className="cancel-button"
-              onClick={onCancel}
-              disabled={loading}
-            >
+            <button type="button" onClick={onCancel} className="cancel-button">
               Отмена
             </button>
-            <button 
-              type="submit" 
-              className="submit-button"
-              disabled={loading}
-            >
+            <button type="submit" className="submit-button" disabled={loading}>
               {loading ? 'Оформление...' : 'Оформить заказ'}
             </button>
           </div>

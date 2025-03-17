@@ -32,12 +32,16 @@ const getCategories = async (req, res) => {
 // Получить продукты по категории
 const getProductsByCategory = async (req, res) => {
   try {
-    const { categoryId } = req.params;
-    const products = await Product.find({ category: categoryId }).populate('category');
+    const products = await Product.find({ category: req.params.categoryId })
+      .populate('category')
+      .sort({ createdAt: -1 });
     res.json(products);
   } catch (error) {
-    console.error('Ошибка при получении продуктов по категории:', error);
-    res.status(500).json({ message: 'Ошибка сервера' });
+    console.error('Ошибка при получении продуктов категории:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Ошибка при получении продуктов категории'
+    });
   }
 };
 
@@ -61,18 +65,16 @@ const searchProducts = async (req, res) => {
 // Получить все продукты
 const getAllProducts = async (req, res) => {
   try {
-    const { category } = req.query;
-    let query = {};
-    
-    if (category) {
-      query.category = category;
-    }
-    
-    const products = await Product.find(query).populate('category');
+    const products = await Product.find()
+      .populate('category')
+      .sort({ createdAt: -1 });
     res.json(products);
   } catch (error) {
     console.error('Ошибка при получении продуктов:', error);
-    res.status(500).json({ message: 'Ошибка сервера' });
+    res.status(500).json({
+      success: false,
+      message: 'Ошибка при получении продуктов'
+    });
   }
 };
 
@@ -90,138 +92,97 @@ const getProductDetails = async (req, res) => {
   }
 };
 
+// Получение продукта по ID
+const getProductById = async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id)
+      .populate('category');
+    
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: 'Продукт не найден'
+      });
+    }
+
+    res.json(product);
+  } catch (error) {
+    console.error('Ошибка при получении продукта:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Ошибка при получении продукта'
+    });
+  }
+};
+
 // Создать новый продукт
 const createProduct = async (req, res) => {
   try {
-    console.log('Получены данные:', {
+    console.log('Создание продукта. Данные:', {
       body: req.body,
-      files: req.files ? req.files.length : 0
+      file: req.file
     });
 
-    const { name, description, price, category, specifications, existingImages } = req.body;
-    
+    const {
+      name,
+      description,
+      price,
+      category,
+      inStock,
+      infiniteStock,
+      discount
+    } = req.body;
+
     // Проверяем обязательные поля
     if (!name || !price || !category) {
-      console.log('Отсутствуют обязательные поля:', { name, price, category });
       return res.status(400).json({
         success: false,
-        message: 'Название, цена и категория обязательны для заполнения'
+        message: 'Название, цена и категория обязательны'
       });
     }
 
-    // Проверяем корректность цены
-    const numericPrice = Number(price);
-    if (isNaN(numericPrice) || numericPrice <= 0) {
-      console.log('Некорректная цена:', price);
+    // Проверяем наличие изображения
+    if (!req.file) {
       return res.status(400).json({
         success: false,
-        message: 'Цена должна быть положительным числом'
+        message: 'Изображение продукта обязательно'
       });
     }
 
-    // Проверяем существование категории
-    const categoryExists = await Category.findById(category);
-    if (!categoryExists) {
-      console.log('Категория не найдена:', category);
-      return res.status(400).json({
-        success: false,
-        message: 'Указанная категория не существует'
-      });
-    }
+    // Формируем путь к изображению относительно сервера
+    const imagePath = `/uploads/${req.file.filename}`;
+    console.log('Путь к изображению:', imagePath);
 
-    // Обработка изображений
-    let images = [];
-    
-    // Добавляем существующие изображения
-    if (existingImages) {
-      const existingImagesArray = Array.isArray(existingImages) 
-        ? existingImages 
-        : [existingImages];
-      images = [...existingImagesArray];
-      console.log('Добавлены существующие изображения:', images);
-    }
-    
-    // Добавляем новые загруженные изображения
-    if (req.files && req.files.length > 0) {
-      const newImages = req.files.map(file => `/uploads/${file.filename}`);
-      images = [...images, ...newImages];
-      console.log('Добавлены новые изображения:', newImages);
-    }
-
-    // Обработка характеристик
-    let parsedSpecs = [];
-    if (specifications) {
-      try {
-        parsedSpecs = JSON.parse(specifications);
-        if (!Array.isArray(parsedSpecs)) {
-          console.log('Некорректный формат характеристик:', specifications);
-          throw new Error('Характеристики должны быть массивом');
-        }
-        // Проверяем структуру каждой характеристики
-        parsedSpecs = parsedSpecs.filter(spec => 
-          spec && typeof spec === 'object' && 
-          spec.name && spec.value && 
-          spec.name.trim() && spec.value.trim()
-        );
-        console.log('Обработанные характеристики:', parsedSpecs);
-      } catch (e) {
-        console.log('Ошибка при парсинге характеристик:', e);
-        return res.status(400).json({
-          success: false,
-          message: 'Неверный формат характеристик'
-        });
-      }
-    }
-
-    const productData = {
+    const product = new Product({
       name: name.trim(),
       description: description ? description.trim() : '',
-      price: numericPrice,
+      price: Number(price),
       category,
-      specifications: parsedSpecs,
-      images
-    };
+      image: imagePath,
+      inStock: inStock === 'true',
+      infiniteStock: infiniteStock === 'true',
+      discount: discount ? Number(discount) : 0
+    });
 
-    console.log('Создание продукта с данными:', productData);
+    console.log('Сохранение продукта:', product);
 
-    const product = new Product(productData);
     await product.save();
-    
-    // Получаем продукт с populated категорией для ответа
-    const populatedProduct = await Product.findById(product._id).populate('category');
+
+    const populatedProduct = await Product.findById(product._id)
+      .populate('category');
 
     console.log('Продукт успешно создан:', populatedProduct);
 
-    return res.status(201).json({
+    res.status(201).json({
       success: true,
-      message: 'Товар успешно создан',
+      message: 'Продукт успешно создан',
       product: populatedProduct
     });
   } catch (error) {
-    console.error('Подробная ошибка при создании продукта:', {
-      name: error.name,
-      message: error.message,
-      stack: error.stack
-    });
-    
-    // Проверяем тип ошибки
-    if (error.name === 'ValidationError') {
-      return res.status(400).json({
-        success: false,
-        message: Object.values(error.errors).map(err => err.message).join(', ')
-      });
-    }
-    
-    if (error.name === 'CastError') {
-      return res.status(400).json({
-        success: false,
-        message: 'Неверный формат данных'
-      });
-    }
-    
-    return res.status(500).json({
+    console.error('Ошибка при создании продукта:', error);
+    res.status(500).json({
       success: false,
-      message: 'Ошибка при создании товара. Пожалуйста, проверьте введенные данные.'
+      message: 'Ошибка при создании продукта'
     });
   }
 };
@@ -229,159 +190,76 @@ const createProduct = async (req, res) => {
 // Обновить продукт
 const updateProduct = async (req, res) => {
   try {
-    console.log('Получены данные для обновления:', {
+    console.log('Обновление продукта. Данные:', {
       body: req.body,
-      files: req.files ? req.files.length : 0,
+      file: req.file,
       params: req.params
     });
 
-    const { name, description, price, category, specifications, existingImages } = req.body;
+    const {
+      name,
+      description,
+      price,
+      category,
+      inStock,
+      infiniteStock,
+      discount
+    } = req.body;
+
+    const updateData = {};
     
-    // Проверяем обязательные поля
-    if (!name || !price || !category) {
-      console.log('Отсутствуют обязательные поля:', { name, price, category });
-      return res.status(400).json({
-        success: false,
-        message: 'Название, цена и категория обязательны для заполнения'
-      });
+    if (name) updateData.name = name.trim();
+    if (description) updateData.description = description.trim();
+    if (price) updateData.price = Number(price);
+    if (category) updateData.category = category;
+    if (typeof inStock !== 'undefined') updateData.inStock = inStock === 'true';
+    if (typeof infiniteStock !== 'undefined') updateData.infiniteStock = infiniteStock === 'true';
+    if (typeof discount !== 'undefined') updateData.discount = Number(discount);
+
+    // Если загружено новое изображение
+    if (req.file) {
+      // Формируем путь к изображению относительно сервера
+      updateData.image = `/uploads/${req.file.filename}`;
+      console.log('Новое изображение:', updateData.image);
+
+      // Получаем старый продукт для удаления старого изображения
+      const oldProduct = await Product.findById(req.params.id);
+      if (oldProduct && oldProduct.image) {
+        const oldImagePath = path.join(__dirname, '..', oldProduct.image);
+        if (fs.existsSync(oldImagePath)) {
+          fs.unlinkSync(oldImagePath);
+          console.log('Старое изображение удалено:', oldImagePath);
+        }
+      }
     }
 
-    // Проверяем корректность цены
-    const numericPrice = Number(price);
-    if (isNaN(numericPrice) || numericPrice <= 0) {
-      console.log('Некорректная цена:', price);
-      return res.status(400).json({
-        success: false,
-        message: 'Цена должна быть положительным числом'
-      });
-    }
+    console.log('Данные для обновления:', updateData);
 
-    // Находим текущий продукт
-    const currentProduct = await Product.findById(req.params.id);
-    if (!currentProduct) {
+    const product = await Product.findByIdAndUpdate(
+      req.params.id,
+      updateData,
+      { new: true, runValidators: true }
+    ).populate('category');
+
+    if (!product) {
       return res.status(404).json({
         success: false,
         message: 'Продукт не найден'
       });
     }
 
-    // Обработка изображений
-    let images = [];
-    
-    // Обрабатываем существующие изображения
-    let parsedExistingImages = [];
-    if (existingImages) {
-      try {
-        parsedExistingImages = JSON.parse(existingImages);
-        console.log('Сохраняемые существующие изображения:', parsedExistingImages);
-        
-        // Находим изображения, которые нужно удалить
-        const imagesToDelete = currentProduct.images.filter(img => 
-          !parsedExistingImages.includes(`${config.baseUrl}${img}`)
-        );
-        
-        // Удаляем файлы изображений, которые больше не нужны
-        for (const imgPath of imagesToDelete) {
-          try {
-            const fullPath = path.join(__dirname, '..', imgPath);
-            if (fs.existsSync(fullPath)) {
-              fs.unlinkSync(fullPath);
-              console.log('Удалено изображение:', fullPath);
-            }
-          } catch (unlinkError) {
-            console.error('Ошибка при удалении изображения:', unlinkError);
-          }
-        }
-
-        // Добавляем оставшиеся существующие изображения
-        images = parsedExistingImages.map(img => 
-          img.replace(`${config.baseUrl}`, '')
-        );
-      } catch (e) {
-        console.error('Ошибка при обработке существующих изображений:', e);
-      }
-    }
-    
-    // Добавляем новые загруженные изображения
-    if (req.files && req.files.length > 0) {
-      const newImages = req.files.map(file => `/uploads/${file.filename}`);
-      images = [...images, ...newImages];
-      console.log('Добавлены новые изображения:', newImages);
-    }
-
-    // Обработка характеристик
-    let parsedSpecs = [];
-    if (specifications) {
-      try {
-        parsedSpecs = JSON.parse(specifications);
-        if (!Array.isArray(parsedSpecs)) {
-          console.log('Некорректный формат характеристик:', specifications);
-          throw new Error('Характеристики должны быть массивом');
-        }
-        // Проверяем структуру каждой характеристики
-        parsedSpecs = parsedSpecs.filter(spec => 
-          spec && typeof spec === 'object' && 
-          spec.name && spec.value && 
-          spec.name.trim() && spec.value.trim()
-        );
-        console.log('Обработанные характеристики:', parsedSpecs);
-      } catch (e) {
-        console.log('Ошибка при парсинге характеристик:', e);
-        return res.status(400).json({
-          success: false,
-          message: 'Неверный формат характеристик'
-        });
-      }
-    }
-
-    const updateData = {
-      name: name.trim(),
-      description: description ? description.trim() : '',
-      price: numericPrice,
-      category,
-      specifications: parsedSpecs,
-      images
-    };
-
-    console.log('Обновление продукта с данными:', updateData);
-
-    const updatedProduct = await Product.findByIdAndUpdate(
-      req.params.id,
-      updateData,
-      { new: true, runValidators: true }
-    ).populate('category');
-
-    console.log('Продукт успешно обновлен:', updatedProduct);
+    console.log('Продукт успешно обновлен:', product);
 
     res.json({
       success: true,
-      message: 'Товар успешно обновлен',
-      product: updatedProduct
+      message: 'Продукт успешно обновлен',
+      product
     });
   } catch (error) {
-    console.error('Ошибка при обновлении продукта:', {
-      name: error.name,
-      message: error.message,
-      stack: error.stack
-    });
-    
-    if (error.name === 'ValidationError') {
-      return res.status(400).json({
-        success: false,
-        message: Object.values(error.errors).map(err => err.message).join(', ')
-      });
-    }
-    
-    if (error.name === 'CastError') {
-      return res.status(400).json({
-        success: false,
-        message: 'Неверный формат данных'
-      });
-    }
-    
+    console.error('Ошибка при обновлении продукта:', error);
     res.status(500).json({
       success: false,
-      message: 'Ошибка при обновлении товара'
+      message: 'Ошибка при обновлении продукта'
     });
   }
 };
@@ -389,55 +267,21 @@ const updateProduct = async (req, res) => {
 // Удалить продукт
 const deleteProduct = async (req, res) => {
   try {
-    const { productId } = req.params;
-    console.log('Попытка удаления продукта:', productId);
-
-    if (!productId) {
-      console.log('ID продукта отсутствует в запросе');
-      return res.status(400).json({
-        success: false,
-        message: 'ID продукта не указан'
-      });
-    }
-
-    const product = await Product.findById(productId);
+    const product = await Product.findByIdAndDelete(req.params.id);
+    
     if (!product) {
-      console.log('Продукт не найден:', productId);
       return res.status(404).json({
         success: false,
         message: 'Продукт не найден'
       });
     }
 
-    // Удаляем изображения продукта
-    if (product.images && product.images.length > 0) {
-      for (const imagePath of product.images) {
-        try {
-          const fullPath = path.join(__dirname, '..', imagePath);
-          if (fs.existsSync(fullPath)) {
-            fs.unlinkSync(fullPath);
-            console.log('Удалено изображение:', fullPath);
-          }
-        } catch (unlinkError) {
-          console.error('Ошибка при удалении изображения:', unlinkError);
-        }
-      }
-    }
-
-    await product.deleteOne();
-    console.log('Продукт успешно удален:', productId);
-
     res.json({
       success: true,
       message: 'Продукт успешно удален'
     });
   } catch (error) {
-    console.error('Ошибка при удалении продукта:', {
-      error: error.message,
-      stack: error.stack,
-      productId: req.params.productId
-    });
-    
+    console.error('Ошибка при удалении продукта:', error);
     res.status(500).json({
       success: false,
       message: 'Ошибка при удалении продукта'
@@ -592,12 +436,54 @@ const updateProductAvailability = async (req, res) => {
   }
 };
 
+// Удалить изображение продукта
+const deleteProductImage = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Получаем продукт
+    const product = await Product.findById(id);
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: 'Продукт не найден'
+      });
+    }
+
+    // Если у продукта есть изображение
+    if (product.image) {
+      // Удаляем файл
+      const imagePath = path.join(__dirname, '..', product.image);
+      if (fs.existsSync(imagePath)) {
+        fs.unlinkSync(imagePath);
+        console.log('Изображение удалено:', imagePath);
+      }
+
+      // Обновляем продукт
+      product.image = null;
+      await product.save();
+    }
+
+    res.json({
+      success: true,
+      message: 'Изображение успешно удалено'
+    });
+  } catch (error) {
+    console.error('Ошибка при удалении изображения:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Ошибка при удалении изображения'
+    });
+  }
+};
+
 module.exports = {
   getCategories,
   getProductsByCategory,
   searchProducts,
   getAllProducts,
   getProductDetails,
+  getProductById,
   createProduct,
   updateProduct,
   deleteProduct,
@@ -605,5 +491,6 @@ module.exports = {
   createCategory,
   updateCategory,
   deleteCategory,
-  updateProductAvailability
+  updateProductAvailability,
+  deleteProductImage
 }; 

@@ -8,7 +8,7 @@ const productSchema = new mongoose.Schema({
   },
   description: {
     type: String,
-    required: [true, 'Описание продукта обязательно'],
+    default: '',
     trim: true
   },
   price: {
@@ -16,37 +16,31 @@ const productSchema = new mongoose.Schema({
     required: [true, 'Цена продукта обязательна'],
     min: [0, 'Цена не может быть отрицательной']
   },
-  images: [{
-    type: String,
-    required: [true, 'Изображение продукта обязательно']
-  }],
   category: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Category',
     required: [true, 'Категория продукта обязательна']
   },
-  specifications: [{
-    name: {
-      type: String,
-      required: true
-    },
-    value: {
-      type: String,
-      required: true
-    }
-  }],
-  isAvailable: {
+  image: {
+    type: String,
+    required: [true, 'Изображение продукта обязательно']
+  },
+  inStock: {
     type: Boolean,
     default: true
   },
-  createdAt: {
-    type: Date,
-    default: Date.now
+  infiniteStock: {
+    type: Boolean,
+    default: false
   },
-  updatedAt: {
-    type: Date,
-    default: Date.now
+  discount: {
+    type: Number,
+    min: [0, 'Скидка не может быть отрицательной'],
+    max: [100, 'Скидка не может быть больше 100%'],
+    default: 0
   }
+}, {
+  timestamps: true
 });
 
 // Middleware для обновления updatedAt перед сохранением

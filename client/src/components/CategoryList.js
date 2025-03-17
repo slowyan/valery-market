@@ -106,14 +106,16 @@ const CategoryList = () => {
       const token = localStorage.getItem('adminToken');
       if (!token) throw new Error('Необходима авторизация');
 
-      const updates = newCategories.map((cat, idx) => ({
-        id: cat._id,
-        order: idx
+      // Изменяем формат данных для соответствия ожиданиям сервера
+      const categories = newCategories.map(cat => ({
+        _id: cat._id
       }));
+
+      console.log('Отправляем данные для обновления порядка:', { categories });
 
       await axios.put(
         `${config.apiUrl}/categories/order`,
-        { categories: updates },
+        { categories },
         {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -144,13 +146,9 @@ const CategoryList = () => {
       [newCategories[index], newCategories[index - 1]] = [newCategories[index - 1], newCategories[index]];
 
       // Подготавливаем данные для отправки
-      const updatedCategories = newCategories.map((cat, idx) => {
-        console.log('Подготовка категории:', { id: cat._id, order: idx });
-        return {
-          id: cat._id.toString(), // Явно преобразуем в строку
-          order: idx // Оставляем как число
-        };
-      });
+      const updatedCategories = newCategories.map(cat => ({
+        _id: cat._id // Используем _id вместо id
+      }));
 
       console.log('Отправляемые данные:', { categories: updatedCategories });
 
@@ -191,13 +189,9 @@ const CategoryList = () => {
       [newCategories[index], newCategories[index + 1]] = [newCategories[index + 1], newCategories[index]];
 
       // Подготавливаем данные для отправки
-      const updatedCategories = newCategories.map((cat, idx) => {
-        console.log('Подготовка категории:', { id: cat._id, order: idx });
-        return {
-          id: cat._id.toString(), // Явно преобразуем в строку
-          order: idx // Оставляем как число
-        };
-      });
+      const updatedCategories = newCategories.map(cat => ({
+        _id: cat._id // Используем _id вместо id
+      }));
 
       console.log('Отправляемые данные:', { categories: updatedCategories });
 

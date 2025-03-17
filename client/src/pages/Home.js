@@ -68,10 +68,10 @@ const Home = () => {
       </Box>
 
       <div className="social-links">
-        <a href="https://wa.me/your_number" target="_blank" rel="noopener noreferrer">
+        <a href="https://wa.me/+79030008554" target="_blank" rel="noopener noreferrer">
           <img src={whatsappIcon} alt="WhatsApp" className="social-icon whatsapp" />
         </a>
-        <a href="https://t.me/your_username" target="_blank" rel="noopener noreferrer">
+        <a href="https://t.me/Valerypools" target="_blank" rel="noopener noreferrer">
           <img src={telegramIcon} alt="Telegram" className="social-icon telegram" />
         </a>
       </div>

@@ -2,24 +2,29 @@ import React from 'react';
 import { formatPrice } from '../utils/format';
 import config from '../config';
 import '../styles/catalog.css';
+import placeholderImage from '../assets/i.webp';
 
 const ProductCard = ({ product, onAddToCart }) => {
-  const { _id, name, description, price, images, isAvailable, specifications } = product;
+  const { _id, name, description, price, image, inStock, specifications, discount } = product;
 
-  const imageUrl = images && images.length > 0 
-    ? images[0].startsWith('http') 
-      ? images[0] 
-      : `${config.baseUrl}${images[0]}`
-    : '/placeholder.jpg';
+  const imageUrl = image
+    ? image.startsWith('http')
+      ? image
+      : `${config.baseUrl}${image}`
+    : placeholderImage;
+
+  const discountedPrice = discount ? Math.round(price * (1 - discount / 100)) : price;
 
   const handleAddToCart = () => {
-    if (isAvailable) {
+    if (inStock) {
       onAddToCart({
         _id,
         name,
         description,
-        price,
-        images,
+        price: discountedPrice,
+        originalPrice: price,
+        discount,
+        image,
         quantity: 1
       });
     }
@@ -27,8 +32,8 @@ const ProductCard = ({ product, onAddToCart }) => {
 
   return (
     <div className="product-card">
-      {!isAvailable && (
-        <div className="product-badge product-badge-unavailable">Нет в наличии</div>
+      {discount > 0 && (
+        <div className="product-badge discount">-{discount}%</div>
       )}
       <div className="product-image">
         <img 
@@ -36,7 +41,7 @@ const ProductCard = ({ product, onAddToCart }) => {
           alt={name}
           onError={(e) => {
             e.target.onerror = null;
-            e.target.src = '/placeholder.jpg';
+            e.target.src = placeholderImage;
           }}
         />
       </div>
@@ -55,14 +60,21 @@ const ProductCard = ({ product, onAddToCart }) => {
         )}
         <div className="product-footer">
           <div className="product-price">
-            <span>{formatPrice(price)} ₽</span>
+            {discount > 0 ? (
+              <>
+                <span className="original-price">{formatPrice(price)} ₽</span>
+                <span className="discounted-price">{formatPrice(discountedPrice)} ₽</span>
+              </>
+            ) : (
+              <span>{formatPrice(price)} ₽</span>
+            )}
           </div>
           <button 
-            className={`add-to-cart-button ${!isAvailable ? 'disabled' : ''}`}
+            className={`add-to-cart-button ${!inStock ? 'disabled' : ''}`}
             onClick={handleAddToCart}
-            disabled={!isAvailable}
+            disabled={!inStock}
           >
-            {isAvailable ? 'В корзину' : 'Нет в наличии'}
+            {inStock ? 'В корзину' : 'Нет в наличии'}
           </button>
         </div>
       </div>

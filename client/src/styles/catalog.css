@@ -393,8 +393,18 @@ h1 {
 }
 
 .product-price {
-	font-size: 17px;
-	font-weight: 600;
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.original-price {
+	font-size: 14px;
+	color: #999;
+	text-decoration: line-through;
+}
+
+.discounted-price {
 	color: #333;
 }
 
@@ -434,6 +444,23 @@ h1 {
 	font-size: 14px;
 	font-weight: 500;
 	z-index: 1;
+	animation: fadeIn 0.3s ease-in-out;
+}
+
+.product-badge.discount {
+	background: #FF3B30;
+	animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+		transform: translateY(-10px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
 }
 
 /* Анимация добавления в корзину */
@@ -701,6 +728,9 @@ h1 {
 		padding: 8px 6px;
 		font-size: 12px;
 		margin: 0;
+	}
+	.original-price {
+		font-size: 0.5rem;
 	}
 }
 

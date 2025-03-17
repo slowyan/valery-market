@@ -1,19 +1,20 @@
 const multer = require('multer');
 const path = require('path');
-const sharp = require('sharp');
 const fs = require('fs');
 
-// Настройка хранилища для загруженных файлов
+// Создаем директорию uploads, если она не существует
+const uploadsDir = path.join(__dirname, '../uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+// Настройка хранилища для multer
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    const uploadDir = path.join(__dirname, '../uploads');
-    // Создаем директорию, если она не существует
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-    cb(null, uploadDir);
+    cb(null, uploadsDir);
   },
   filename: function (req, file, cb) {
+    // Генерируем уникальное имя файла
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
     cb(null, uniqueSuffix + path.extname(file.originalname));
   }
@@ -21,57 +22,64 @@ const storage = multer.diskStorage({
 
 // Фильтр файлов
 const fileFilter = (req, file, cb) => {
+  // Разрешенные типы файлов
   const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+  
   if (allowedTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error('Неподдерживаемый формат файла. Разрешены только JPEG, PNG, GIF и WebP.'), false);
+    cb(new Error('Неподдерживаемый формат файла. Разрешены только JPEG, PNG, GIF и WEBP.'), false);
   }
 };
 
-// Настройка загрузки
+// Создаем middleware для загрузки
 const upload = multer({
   storage: storage,
   fileFilter: fileFilter,
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB
-    files: 10 // максимум 10 файлов
+    fileSize: 5 * 1024 * 1024 // 5 MB
   }
-}).array('image', 10); // Изменено с 'images' на 'image'
+});
 
-// Обработка изображений
-const processImage = async (req, res, next) => {
-  if (!req.files || req.files.length === 0) {
-    return next();
-  }
-
-  try {
-    const processedFiles = [];
-
-    for (const file of req.files) {
-      const outputPath = file.path;
-      await sharp(file.path)
-        .resize(800, 800, {
-          fit: 'inside',
-          withoutEnlargement: true
-        })
-        .jpeg({ quality: 80 })
-        .toFile(outputPath + '_processed');
-
-      // Заменяем оригинальный файл обработанным
-      fs.unlinkSync(file.path);
-      fs.renameSync(outputPath + '_processed', outputPath);
-
-      processedFiles.push(file);
+// Middleware для загрузки одного файла
+const uploadImage = (req, res, next) => {
+  upload.single('image')(req, res, (err) => {
+    if (err instanceof multer.MulterError) {
+      // Ошибка multer
+      return res.status(400).json({
+        success: false,
+        message: `Ошибка загрузки файла: ${err.message}`
+      });
+    } else if (err) {
+      // Другая ошибка
+      return res.status(400).json({
+        success: false,
+        message: err.message
+      });
     }
-
-    req.files = processedFiles;
+    
+    // Если файл загружен успешно, добавляем путь к файлу в req.body
+    if (req.file) {
+      req.body.image = `/uploads/${req.file.filename}`;
+    }
+    
     next();
-  } catch (error) {
-    console.error('Ошибка при обработке изображений:', error);
-    next(error);
-  }
+  });
 };
 
-module.exports = { upload, processImage }; 
+// Middleware для проверки наличия файла
+const processImage = (req, res, next) => {
+  if (!req.file && req.method === 'POST') {
+    return res.status(400).json({
+      success: false,
+      message: 'Пожалуйста, загрузите изображение'
+    });
+  }
+  next();
+};
+
+module.exports = {
+  uploadImage,
+  processImage
+}; 
  

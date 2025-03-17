@@ -4,12 +4,11 @@ const categorySchema = new mongoose.Schema({
   name: {
     type: String,
     required: [true, 'Название категории обязательно'],
-    trim: true,
-    unique: true
+    unique: true,
+    trim: true
   },
   description: {
     type: String,
-    trim: true,
     default: ''
   },
   image: {
@@ -29,6 +28,8 @@ const categorySchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   }
+}, {
+  timestamps: true
 });
 
 const Category = mongoose.model('Category', categorySchema);

@@ -3,13 +3,33 @@ const Category = require('../models/Category');
 // Получение всех категорий
 const getAllCategories = async (req, res) => {
   try {
-    const categories = await Category.find().sort('name');
+    const categories = await Category.find().sort({ order: 1 });
     res.json(categories);
   } catch (error) {
     console.error('Ошибка при получении категорий:', error);
     res.status(500).json({
       success: false,
       message: 'Ошибка при получении категорий'
+    });
+  }
+};
+
+// Получение категории по ID
+const getCategoryById = async (req, res) => {
+  try {
+    const category = await Category.findById(req.params.id);
+    if (!category) {
+      return res.status(404).json({
+        success: false,
+        message: 'Категория не найдена'
+      });
+    }
+    res.json(category);
+  } catch (error) {
+    console.error('Ошибка при получении категории:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Ошибка при получении категории'
     });
   }
 };
@@ -34,6 +54,14 @@ const createCategory = async (req, res) => {
       });
     }
 
+    // Проверяем наличие изображения
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: 'Изображение категории обязательно'
+      });
+    }
+
     // Проверяем уникальность названия
     const normalizedName = name.trim().toLowerCase();
     const existingCategory = await Category.findOne({
@@ -48,17 +76,17 @@ const createCategory = async (req, res) => {
       });
     }
 
+    // Получаем максимальный order
+    const maxOrderCategory = await Category.findOne().sort('-order');
+    const nextOrder = maxOrderCategory ? maxOrderCategory.order + 1 : 0;
+
     // Создаем новую категорию
     const categoryData = {
       name: name.trim(),
-      description: description ? description.trim() : ''
+      description: description ? description.trim() : '',
+      image: `/uploads/${req.file.filename}`,
+      order: nextOrder
     };
-
-    // Добавляем изображение, если оно загружено
-    if (req.file) {
-      categoryData.image = `/uploads/${req.file.filename}`;
-      console.log('Добавлено изображение:', categoryData.image);
-    }
 
     console.log('Создание категории с данными:', categoryData);
 
@@ -106,9 +134,19 @@ const createCategory = async (req, res) => {
 // Обновление категории
 const updateCategory = async (req, res) => {
   try {
+    const { name, description } = req.body;
+    const updateData = {
+      name,
+      description
+    };
+
+    if (req.file) {
+      updateData.image = `/uploads/${req.file.filename}`;
+    }
+
     const category = await Category.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      updateData,
       { new: true, runValidators: true }
     );
 
@@ -157,10 +195,77 @@ const deleteCategory = async (req, res) => {
   }
 };
 
+// Обновление порядка категорий
+const updateCategoriesOrder = async (req, res) => {
+  try {
+    console.log('Обновление порядка категорий. Полученные данные:', req.body);
+    
+    const { categories } = req.body;
+
+    if (!Array.isArray(categories)) {
+      console.log('Ошибка: данные не являются массивом');
+      return res.status(400).json({
+        success: false,
+        message: 'Неверный формат данных. Ожидается массив категорий.'
+      });
+    }
+
+    // Проверяем, что все ID существуют
+    const categoryIds = categories.map(cat => cat._id);
+    console.log('ID категорий для обновления:', categoryIds);
+
+    const existingCategories = await Category.find({ _id: { $in: categoryIds } });
+    console.log('Найденные категории:', existingCategories.map(cat => ({ _id: cat._id, name: cat.name })));
+
+    if (existingCategories.length !== categories.length) {
+      console.log('Ошибка: не все категории найдены');
+      return res.status(400).json({
+        success: false,
+        message: 'Некоторые категории не найдены'
+      });
+    }
+
+    // Обновляем порядок для каждой категории
+    const bulkOps = categories.map((cat, index) => ({
+      updateOne: {
+        filter: { _id: cat._id },
+        update: { $set: { order: index } }
+      }
+    }));
+
+    console.log('Операции обновления:', bulkOps);
+
+    await Category.bulkWrite(bulkOps);
+
+    // Получаем обновленный список категорий
+    const sortedCategories = await Category.find().sort({ order: 1 });
+    console.log('Обновленный порядок категорий:', 
+      sortedCategories.map(cat => ({ _id: cat._id, name: cat.name, order: cat.order }))
+    );
+
+    res.json({
+      success: true,
+      message: 'Порядок категорий успешно обновлен',
+      categories: sortedCategories
+    });
+  } catch (error) {
+    console.error('Ошибка при обновлении порядка категорий:', {
+      message: error.message,
+      stack: error.stack
+    });
+    res.status(500).json({
+      success: false,
+      message: 'Ошибка при обновлении порядка категорий'
+    });
+  }
+};
+
 module.exports = {
   getAllCategories,
+  getCategoryById,
   createCategory,
   updateCategory,
-  deleteCategory
+  deleteCategory,
+  updateCategoriesOrder
 }; 
  

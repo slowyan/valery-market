@@ -10,6 +10,9 @@ const ProductForm = ({ onSubmit, onCancel, initialData }) => {
     description: '',
     price: '',
     category: '',
+    inStock: true,
+    infiniteStock: false,
+    discount: 0,
     specifications: []
   });
   const [selectedFiles, setSelectedFiles] = useState([]);
@@ -18,7 +21,7 @@ const ProductForm = ({ onSubmit, onCancel, initialData }) => {
   const [categories, setCategories] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [existingImages, setExistingImages] = useState([]);
+  const [imageToDelete, setImageToDelete] = useState(false);
   const [imageFiles, setImageFiles] = useState([]);
 
   // Загружаем список категорий при монтировании
@@ -34,16 +37,18 @@ const ProductForm = ({ onSubmit, onCancel, initialData }) => {
         description: initialData.description || '',
         price: initialData.price || '',
         category: initialData.category?._id || initialData.category || '',
+        inStock: initialData.inStock ?? true,
+        infiniteStock: initialData.infiniteStock ?? false,
+        discount: initialData.discount || 0,
         specifications: initialData.specifications || []
       });
 
-      // Если есть изображения, устанавливаем их предпросмотр
-      if (initialData.images && initialData.images.length > 0) {
-        const previews = initialData.images.map(image => 
-          image.startsWith('http') ? image : `${config.baseUrl}${image}`
-        );
-        setImagePreviews(previews);
-        setExistingImages(previews.filter(preview => preview.startsWith(config.baseUrl)));
+      // Если есть изображение, устанавливаем его предпросмотр
+      if (initialData.image) {
+        const imagePath = initialData.image.startsWith('http') 
+          ? initialData.image 
+          : `${config.baseUrl}${initialData.image}`;
+        setImagePreviews([imagePath]);
       }
     }
   }, [initialData]);
@@ -129,37 +134,16 @@ const ProductForm = ({ onSubmit, onCancel, initialData }) => {
       return newPreviews;
     });
 
-    // Удаляем из списка существующих изображений, если это существующее изображение
-    setExistingImages(prev => {
-      const newExistingImages = [...prev];
-      const removedImage = imagePreviews[index];
-      const existingIndex = newExistingImages.indexOf(removedImage);
-      if (existingIndex !== -1) {
-        newExistingImages.splice(existingIndex, 1);
-      }
-      return newExistingImages;
-    });
-
-    // Удаляем из списка новых файлов, если это новое изображение
     setImageFiles(prev => {
-      const newFiles = [...prev];
-      const removedPreview = imagePreviews[index];
-      if (!removedPreview.startsWith(config.baseUrl)) {
-        const fileIndex = prev.findIndex(file => 
-          URL.createObjectURL(file) === removedPreview
-        );
-        if (fileIndex !== -1) {
-          newFiles.splice(fileIndex, 1);
-        }
-      }
-      return newFiles;
-    });
-
-    setSelectedFiles(prev => {
       const newFiles = [...prev];
       newFiles.splice(index, 1);
       return newFiles;
     });
+
+    // Если это существующее изображение, помечаем его для удаления
+    if (initialData && initialData.image) {
+      setImageToDelete(true);
+    }
   };
 
   // Очистка URL предпросмотров при размонтировании
@@ -175,49 +159,79 @@ const ProductForm = ({ onSubmit, onCancel, initialData }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
     setLoading(true);
-    setError(null);
+    setUploadProgress(0);
 
     try {
       if (!isAuthenticated()) {
         throw new Error('Необходима авторизация');
       }
 
-      // Валидация
+      // Проверяем обязательные поля
       if (!formData.name.trim()) {
-        throw new Error('Название товара обязательно');
+        setError('Название продукта обязательно');
+        setLoading(false);
+        return;
       }
-      if (!formData.price || formData.price <= 0) {
-        throw new Error('Укажите корректную цену');
+
+      if (!formData.price) {
+        setError('Цена продукта обязательна');
+        setLoading(false);
+        return;
       }
+
       if (!formData.category) {
-        throw new Error('Выберите категорию');
+        setError('Категория продукта обязательна');
+        setLoading(false);
+        return;
       }
 
-      const submitFormData = new FormData();
-      submitFormData.append('name', formData.name.trim());
-      submitFormData.append('description', formData.description.trim());
-      submitFormData.append('price', formData.price);
-      submitFormData.append('category', formData.category);
-      
-      // Добавляем существующие изображения
-      if (existingImages.length > 0) {
-        submitFormData.append('existingImages', JSON.stringify(existingImages));
+      // Если это новый продукт и нет изображения
+      if (!initialData && imageFiles.length === 0) {
+        setError('Изображение продукта обязательно');
+        setLoading(false);
+        return;
       }
 
-      // Добавляем новые изображения
+      const submitData = new FormData();
+      submitData.append('name', formData.name.trim());
+      submitData.append('description', formData.description.trim());
+      submitData.append('price', formData.price);
+      submitData.append('category', formData.category);
+      submitData.append('inStock', formData.inStock);
+      submitData.append('infiniteStock', formData.infiniteStock);
+      submitData.append('discount', formData.discount);
+
+      // Если нужно удалить существующее изображение
+      if (imageToDelete) {
+        try {
+          const token = localStorage.getItem('adminToken');
+          if (!token) {
+            throw new Error('Необходима авторизация');
+          }
+
+          await axios.delete(
+            `${config.apiUrl}/products/${initialData._id}/image`,
+            {
+              headers: {
+                'Authorization': `Bearer ${token}`
+              }
+            }
+          );
+        } catch (error) {
+          console.error('Ошибка при удалении изображения:', error);
+          // Продолжаем выполнение, даже если удаление не удалось
+        }
+      }
+
+      // Добавляем новое изображение, если оно есть
       if (imageFiles.length > 0) {
-        imageFiles.forEach(file => {
-          submitFormData.append('image', file);
-        });
+        submitData.append('image', imageFiles[0]);
       }
 
-      // Добавляем характеристики
-      if (formData.specifications.length > 0) {
-        submitFormData.append('specifications', JSON.stringify(formData.specifications));
-      }
-
-      await onSubmit(submitFormData);
+      // Отправляем данные через колбэк
+      await onSubmit(submitData, setUploadProgress);
 
       // Очищаем форму после успешного сохранения
       if (!initialData) {
@@ -226,16 +240,20 @@ const ProductForm = ({ onSubmit, onCancel, initialData }) => {
           description: '',
           price: '',
           category: '',
+          inStock: true,
+          infiniteStock: false,
+          discount: 0,
           specifications: []
         });
         setSelectedFiles([]);
         setImagePreviews([]);
         setImageFiles([]);
-        setExistingImages([]);
+        setImageToDelete(false);
+        setUploadProgress(0);
       }
     } catch (error) {
       console.error('Ошибка при отправке формы:', error);
-      setError(error.response?.data?.message || 'Произошла ошибка при сохранении товара');
+      setError(error.message || 'Произошла ошибка при сохранении продукта');
     } finally {
       setLoading(false);
     }
@@ -342,7 +360,6 @@ const ProductForm = ({ onSubmit, onCancel, initialData }) => {
           id="images"
           name="images"
           accept="image/*"
-          multiple
           onChange={handleImageChange}
         />
         <div className="image-previews">
@@ -374,6 +391,44 @@ const ProductForm = ({ onSubmit, onCancel, initialData }) => {
             <span className="progress-text">{uploadProgress}%</span>
           </div>
         )}
+      </div>
+
+      <div className="form-group checkbox-group">
+        <label>
+          <input
+            type="checkbox"
+            name="inStock"
+            checked={formData.inStock}
+            onChange={(e) => setFormData({ ...formData, inStock: e.target.checked })}
+          />
+          <span>В наличии</span>
+        </label>
+      </div>
+
+      <div className="form-group checkbox-group">
+        <label>
+          <input
+            type="checkbox"
+            name="infiniteStock"
+            checked={formData.infiniteStock}
+            onChange={(e) => setFormData({ ...formData, infiniteStock: e.target.checked })}
+          />
+          <span>Бесконечное количество</span>
+        </label>
+      </div>
+
+      <div className="form-group">
+        <label>
+          Скидка (%)
+          <input
+            type="number"
+            name="discount"
+            value={formData.discount}
+            onChange={(e) => setFormData({ ...formData, discount: e.target.value })}
+            min="0"
+            max="100"
+          />
+        </label>
       </div>
 
       <div className="form-actions">

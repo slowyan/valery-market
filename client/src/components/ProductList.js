@@ -187,13 +187,17 @@ const ProductList = () => {
               {products.map(product => (
                 <tr key={product._id}>
                   <td>
-                    {product.images && product.images[0] && (
+                    <div className="product-image-container">
                       <img
-                        src={product.images[0]}
+                        src={product.image ? `${config.baseUrl}${product.image}` : '/placeholder.jpg'}
                         alt={product.name}
                         className="product-thumbnail"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = '/placeholder.jpg';
+                        }}
                       />
-                    )}
+                    </div>
                   </td>
                   <td>{product.name}</td>
                   <td>{product.category?.name || 'Без категории'}</td>
