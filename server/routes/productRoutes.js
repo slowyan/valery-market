@@ -1,25 +1,43 @@
 const express = require('express');
 const router = express.Router();
-const productController = require('../controllers/productController');
-const auth = require('../middleware/auth');
-const adminAuth = require('../middleware/adminAuth');
+const Product = require('../models/Product');
+const { auth, isAdmin } = require('../middleware/authMiddleware');
 const { upload, processImage } = require('../middleware/uploadImage');
+const {
+  getCategories,
+  getProductsByCategory,
+  searchProducts,
+  getAllProducts,
+  getProductDetails,
+  createProduct,
+  updateProduct,
+  deleteProduct,
+  uploadImages,
+  createCategory,
+  updateCategory,
+  deleteCategory,
+  updateProductAvailability
+} = require('../controllers/productController');
 
 // Публичные маршруты
-router.get('/categories', productController.getCategories);
-router.get('/category/:categoryId', productController.getProductsByCategory);
-router.get('/search', productController.searchProducts);
-router.get('/', productController.getAllProducts);
-router.get('/:productId', productController.getProductDetails);
+router.get('/categories', getCategories);
+router.get('/category/:categoryId', getProductsByCategory);
+router.get('/search', searchProducts);
+router.get('/', getAllProducts);
+router.get('/:id', getProductDetails);
 
 // Маршруты для админ-панели (требуют аутентификации и прав админа)
-router.post('/', [auth, adminAuth, upload, processImage], productController.createProduct);
-router.put('/:productId', [auth, adminAuth, upload, processImage], productController.updateProduct);
-router.delete('/:productId', auth, adminAuth, productController.deleteProduct);
-router.patch('/:productId/availability', auth, adminAuth, productController.updateProductAvailability);
+router.post('/', [auth, isAdmin], upload, processImage, createProduct);
+router.put('/:id', [auth, isAdmin], upload, processImage, updateProduct);
+router.delete('/:id', [auth, isAdmin], deleteProduct);
+router.patch('/:id/availability', [auth, isAdmin], updateProductAvailability);
 
 // Управление категориями (только для админа)
-router.post('/categories', auth, adminAuth, productController.createCategory);
-router.delete('/categories/:categoryId', auth, adminAuth, productController.deleteCategory);
+router.post('/categories', [auth, isAdmin], upload, processImage, createCategory);
+router.put('/categories/:id', [auth, isAdmin], upload, processImage, updateCategory);
+router.delete('/categories/:id', [auth, isAdmin], deleteCategory);
+
+// Маршрут для загрузки файлов
+router.post('/upload', [auth, isAdmin], upload, processImage, uploadImages);
 
 module.exports = router; 

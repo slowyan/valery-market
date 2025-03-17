@@ -120,7 +120,7 @@ const verifyCode = async (req, res) => {
 
         // Создаем токен
         const token = jwt.sign(
-            { userId: user._id, role: user.role },
+            { userId: user._id, isAdmin: user.isAdmin },
             process.env.JWT_SECRET,
             { expiresIn: '7d' }
         );
@@ -230,79 +230,81 @@ const login = async (req, res) => {
     }
 };
 
-// Вход для администраторов
+// Аутентификация админа
 const adminLogin = async (req, res) => {
-    try {
-        const { email, password } = req.body;
-        console.log('Попытка входа администратора:', { email });
+  try {
+    const { email, password } = req.body;
+    console.log('Попытка входа:', { email });
 
-        // Находим пользователя
-        const user = await User.findOne({ email });
-        console.log('Найден пользователь:', user ? { 
-            email: user.email, 
-            isAdmin: user.isAdmin,
-            hashedPassword: user.password.substring(0, 10) + '...' // Показываем только часть хэша
-        } : 'Пользователь не найден');
+    // Проверяем существование пользователя
+    const user = await User.findOne({ email });
+    console.log('Найден пользователь:', user ? 'да' : 'нет');
 
-        if (!user || !user.isAdmin) {
-            console.log('Отказано в доступе: пользователь не найден или не является администратором');
-            return res.status(401).json({
-                success: false,
-                message: 'Доступ запрещен'
-            });
-        }
-
-        // Проверяем пароль
-        console.log('Проверяем пароль...');
-        console.log('Введенный пароль:', password);
-        
-        // Пробуем оба метода проверки пароля
-        const isMatchBcrypt = await bcrypt.compare(password, user.password);
-        const isMatchMethod = await user.comparePassword(password);
-        
-        console.log('Результаты проверки пароля:', {
-            bcrypt: isMatchBcrypt,
-            method: isMatchMethod
-        });
-
-        if (!isMatchBcrypt) {
-            console.log('Отказано в доступе: неверный пароль');
-            return res.status(401).json({
-                success: false,
-                message: 'Неверный email или пароль'
-            });
-        }
-
-        console.log('Пароль верный, создаем токен...');
-
-        // Создаем токен
-        const token = jwt.sign(
-            { 
-                userId: user._id,
-                isAdmin: user.isAdmin 
-            },
-            process.env.JWT_SECRET || 'dev-secret-key',
-            { expiresIn: '24h' }
-        );
-
-        console.log('Токен создан, отправляем ответ...');
-
-        res.json({
-            success: true,
-            token,
-            user: {
-                _id: user._id,
-                email: user.email,
-                isAdmin: user.isAdmin
-            }
-        });
-    } catch (error) {
-        console.error('Ошибка при входе администратора:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Ошибка при входе в систему'
-        });
+    if (!user) {
+      return res.status(401).json({ 
+        success: false,
+        message: 'Неверный email или пароль' 
+      });
     }
+
+    // Проверяем права администратора
+    if (!user.isAdmin) {
+      console.log('Пользователь не является администратором');
+      return res.status(403).json({ 
+        success: false,
+        message: 'Доступ запрещен. Требуются права администратора' 
+      });
+    }
+
+    // Проверяем пароль
+    const isMatch = await user.comparePassword(password);
+    console.log('Проверка пароля:', isMatch ? 'успешно' : 'неверный пароль');
+
+    if (!isMatch) {
+      return res.status(401).json({ 
+        success: false,
+        message: 'Неверный email или пароль' 
+      });
+    }
+
+    // Создаем JWT токен
+    const token = jwt.sign(
+      { userId: user._id, isAdmin: user.isAdmin },
+      process.env.JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
+    console.log('Вход выполнен успешно');
+
+    res.json({
+      success: true,
+      token,
+      user: user.getPublicProfile()
+    });
+  } catch (error) {
+    console.error('Ошибка при входе:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Ошибка сервера' 
+    });
+  }
+};
+
+// Проверка текущего пользователя
+const checkAuth = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('-password');
+    res.json({
+      success: true,
+      user
+    });
+  } catch (error) {
+    console.error('Ошибка при проверке аутентификации:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Ошибка сервера' 
+    });
+  }
 };
 
 module.exports = {
@@ -310,5 +312,6 @@ module.exports = {
     verifyCode,
     register,
     login,
-    adminLogin
+    adminLogin,
+    checkAuth
 }; 

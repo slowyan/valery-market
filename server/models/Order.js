@@ -1,22 +1,26 @@
 const mongoose = require('mongoose');
 
 const orderSchema = new mongoose.Schema({
-  userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: false // Может быть null для неавторизованных пользователей
+  customerName: {
+    type: String,
+    required: [true, 'Имя клиента обязательно']
+  },
+  phone: {
+    type: String,
+    required: [true, 'Номер телефона обязателен']
+  },
+  email: {
+    type: String,
+    required: [true, 'Email обязателен']
+  },
+  address: {
+    type: String,
+    required: [true, 'Адрес обязателен']
   },
   items: [{
-    productId: {
-      type: Number,
-      required: true
-    },
-    name: {
-      type: String,
-      required: true
-    },
-    price: {
-      type: Number,
+    product: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Product',
       required: true
     },
     quantity: {
@@ -24,9 +28,9 @@ const orderSchema = new mongoose.Schema({
       required: true,
       min: 1
     },
-    discount: {
+    price: {
       type: Number,
-      default: 0
+      required: true
     }
   }],
   totalAmount: {
@@ -35,48 +39,13 @@ const orderSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['pending', 'processing', 'completed', 'cancelled'],
-    default: 'pending'
-  },
-  shippingAddress: {
-    city: {
-      type: String,
-      required: true
-    },
-    street: {
-      type: String,
-      required: true
-    },
-    house: {
-      type: String,
-      required: true
-    },
-    apartment: String,
-    postalCode: {
-      type: String,
-      required: true
-    }
-  },
-  contactPhone: {
-    type: String,
-    required: function() {
-      return !this.userId; // Обязательно только для неавторизованных пользователей
-    }
+    enum: ['new', 'processing', 'completed', 'cancelled'],
+    default: 'new'
   },
   createdAt: {
     type: Date,
     default: Date.now
-  },
-  updatedAt: {
-    type: Date,
-    default: Date.now
   }
-});
-
-// Обновляем updatedAt перед сохранением
-orderSchema.pre('save', function(next) {
-  this.updatedAt = Date.now();
-  next();
 });
 
 module.exports = mongoose.model('Order', orderSchema); 

@@ -1,25 +1,19 @@
 const express = require('express');
 const router = express.Router();
-const orderController = require('../controllers/orderController');
-const auth = require('../middleware/auth');
-const adminAuth = require('../middleware/adminAuth');
+const { isAdmin } = require('../middleware/authMiddleware');
+const {
+  getAllOrders,
+  getOrderDetails,
+  createOrder,
+  updateOrderStatus
+} = require('../controllers/orderController');
 
-// Создание заказа (доступно всем)
-router.post('/', orderController.createOrder);
+// Маршруты для администратора
+router.get('/', isAdmin, getAllOrders);
+router.get('/:id', isAdmin, getOrderDetails);
+router.put('/:id/status', isAdmin, updateOrderStatus);
 
-// Получение всех заказов (только для админа)
-router.get('/all', auth, adminAuth, orderController.getAllOrders);
-
-// Получение заказов пользователя
-router.get('/my', auth, orderController.getUserOrders);
-
-// Обновление статуса заказа (только для админа)
-router.patch('/:orderId/status', auth, adminAuth, orderController.updateOrderStatus);
-
-// Получение деталей заказа
-router.get('/:orderId', auth, orderController.getOrderDetails);
-
-// Отмена заказа (требует аутентификации)
-router.post('/:orderId/cancel', auth, orderController.cancelOrder);
+// Публичные маршруты
+router.post('/', createOrder);
 
 module.exports = router; 

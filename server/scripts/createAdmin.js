@@ -1,52 +1,46 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
 const User = require('../models/User');
-const config = require('../config');
-const bcrypt = require('bcryptjs');
 
 const createAdmin = async () => {
   try {
-    // Подключаемся к базе данных
-    await mongoose.connect(config.mongoUri);
+    // Подключаемся к той же базе данных, что и сервер
+    const dbUri = process.env.NODE_ENV === 'development' 
+      ? 'mongodb://localhost:27017/valery-market-dev'
+      : process.env.MONGODB_URI;
+
+    await mongoose.connect(dbUri);
     console.log('Connected to MongoDB');
 
-    // Данные администратора
-    const adminData = {
-      email: 'admin@valery-pools.com',
-      password: 'adminpass123',
-      name: 'Administrator',
-      isAdmin: true,
-      phone: '+7 (999) 999-99-99'
-    };
-
-    // Проверяем, существует ли уже администратор
-    const existingAdmin = await User.findOne({ email: adminData.email });
-    if (existingAdmin) {
-      console.log('Удаляем существующего администратора');
-      await User.deleteOne({ email: adminData.email });
-    }
+    // Удаляем существующего администратора
+    await User.deleteOne({ email: 'admin@valery-pools.com' });
+    console.log('Удаляем существующего администратора');
 
     // Создаем нового администратора
-    const admin = new User(adminData);
-    
-    // Сохраняем администратора (пароль будет хэширован автоматически через middleware)
+    const admin = new User({
+      email: 'admin@valery-pools.com',
+      password: 'adminpass123',
+      isAdmin: true
+    });
+
     await admin.save();
-    
-    // Проверяем, что администратор создан
-    const createdAdmin = await User.findOne({ email: adminData.email });
+
+    // Проверяем сохранение
+    const savedAdmin = await User.findOne({ email: 'admin@valery-pools.com' });
+    const passwordCheck = await savedAdmin.comparePassword('adminpass123');
+
     console.log('Администратор успешно создан:');
-    console.log('Email:', adminData.email);
-    console.log('Пароль:', adminData.password);
-    console.log('isAdmin:', createdAdmin.isAdmin);
-    console.log('ID:', createdAdmin._id);
-    
-    // Проверяем, что пароль правильно хэширован
-    const isPasswordValid = await createdAdmin.comparePassword(adminData.password);
-    console.log('Проверка пароля:', isPasswordValid);
-    
+    console.log('Email:', savedAdmin.email);
+    console.log('Пароль: adminpass123');
+    console.log('isAdmin:', savedAdmin.isAdmin);
+    console.log('ID:', savedAdmin._id);
+    console.log('Проверка пароля:', passwordCheck);
+
+    await mongoose.connection.close();
     process.exit(0);
   } catch (error) {
     console.error('Ошибка при создании администратора:', error);
+    await mongoose.connection.close();
     process.exit(1);
   }
 };

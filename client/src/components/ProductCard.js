@@ -1,8 +1,13 @@
 import React from 'react';
+import { formatPrice } from '../utils/format';
 import '../styles/catalog.css';
 
 const ProductCard = ({ product, onAddToCart }) => {
-  const { name, description, price, image, isAvailable, specifications } = product;
+  const { name, description, price, images, isAvailable, specifications } = product;
+
+  const imageUrl = images && images.length > 0 
+    ? images[0] 
+    : '/placeholder.jpg';
 
   return (
     <div className="product-card">
@@ -10,7 +15,14 @@ const ProductCard = ({ product, onAddToCart }) => {
         <div className="product-badge product-badge-unavailable">Нет в наличии</div>
       )}
       <div className="product-image">
-        <img src={image} alt={name} />
+        <img 
+          src={imageUrl} 
+          alt={name}
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.src = '/placeholder.jpg';
+          }}
+        />
       </div>
       <div className="product-info">
         <h3 className="product-name">{name}</h3>
@@ -27,7 +39,7 @@ const ProductCard = ({ product, onAddToCart }) => {
         )}
         <div className="product-footer">
           <div className="product-price">
-            <span>{price} ₽</span>
+            <span>{formatPrice(price)} ₽</span>
           </div>
           <button 
             className={`add-to-cart-button ${!isAvailable ? 'disabled' : ''}`}

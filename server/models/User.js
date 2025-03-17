@@ -15,23 +15,15 @@ const userSchema = new mongoose.Schema({
   },
   name: {
     type: String,
-    required: true,
     trim: true
-  },
-  isAdmin: {
-    type: Boolean,
-    default: false
   },
   phone: {
     type: String,
     trim: true
   },
-  address: {
-    city: String,
-    street: String,
-    house: String,
-    apartment: String,
-    postalCode: String
+  isAdmin: {
+    type: Boolean,
+    default: false
   },
   createdAt: {
     type: Date,
@@ -39,7 +31,7 @@ const userSchema = new mongoose.Schema({
   }
 });
 
-// Хэширование пароля перед сохранением
+// Хеширование пароля перед сохранением
 userSchema.pre('save', async function(next) {
   if (this.isModified('password')) {
     this.password = await bcrypt.hash(this.password, 10);
@@ -47,16 +39,22 @@ userSchema.pre('save', async function(next) {
   next();
 });
 
-// Метод для проверки пароля
+// Метод для сравнения паролей
 userSchema.methods.comparePassword = async function(candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
 };
 
 // Метод для получения публичных данных пользователя
 userSchema.methods.getPublicProfile = function() {
-  const userObject = this.toObject();
-  delete userObject.password;
-  return userObject;
+  return {
+    id: this._id,
+    email: this.email,
+    name: this.name,
+    phone: this.phone,
+    isAdmin: this.isAdmin
+  };
 };
 
-module.exports = mongoose.model('User', userSchema); 
+const User = mongoose.model('User', userSchema);
+
+module.exports = User; 

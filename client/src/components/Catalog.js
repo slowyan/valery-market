@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ProductCard from './ProductCard';
 import Cart from './Cart';
@@ -6,84 +6,76 @@ import CheckoutForm from './CheckoutForm';
 import '../styles/catalog.css';
 import axios from 'axios';
 import config from '../config';
-
-// Примерные данные для тестирования
-const sampleCategories = [
-  { id: 1, name: 'Оборудование', image: 'https://via.placeholder.com/300x200?text=Оборудование' },
-  { id: 2, name: 'Химия', image: 'https://via.placeholder.com/300x200?text=Химия' },
-  { id: 3, name: 'Аксессуары', image: 'https://via.placeholder.com/300x200?text=Аксессуары' },
-];
-
-const sampleProducts = [
-  {
-    id: 1,
-    name: 'Фильтр для бассейна',
-    description: 'Высокоэффективный фильтр для очистки воды в бассейне. Подходит для бассейнов объемом до 50 000 литров.',
-    price: 15000,
-    image: 'https://via.placeholder.com/300x200?text=Фильтр',
-    category: 1,
-    discount: 10
-  },
-  {
-    id: 2,
-    name: 'Хлор для бассейна',
-    description: 'Дезинфицирующее средство для обработки воды. Эффективно уничтожает бактерии и водоросли.',
-    price: 2500,
-    image: 'https://via.placeholder.com/300x200?text=Хлор',
-    category: 2
-  },
-  {
-    id: 3,
-    name: 'Термометр для воды',
-    description: 'Плавающий термометр для измерения температуры воды в бассейне.',
-    price: 800,
-    image: 'https://via.placeholder.com/300x200?text=Термометр',
-    category: 3,
-    discount: 15
-  },
-  {
-    id: 4,
-    name: 'Насос для бассейна',
-    description: 'Мощный насос для циркуляции воды. Обеспечивает эффективную фильтрацию.',
-    price: 20000,
-    image: 'https://via.placeholder.com/300x200?text=Насос',
-    category: 1
-  },
-  {
-    id: 5,
-    name: 'pH минус',
-    description: 'Средство для снижения уровня pH воды в бассейне.',
-    price: 1200,
-    image: 'https://via.placeholder.com/300x200?text=pH-минус',
-    category: 2,
-    discount: 5
-  },
-  {
-    id: 6,
-    name: 'Сачок для бассейна',
-    description: 'Сачок для очистки поверхности воды от мусора.',
-    price: 1500,
-    image: 'https://via.placeholder.com/300x200?text=Сачок',
-    category: 3
-  }
-];
+import '../styles/catalog.css';
 
 const Catalog = () => {
   const navigate = useNavigate();
-  const [categories, setCategories] = useState(sampleCategories);
-  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState(null);
   const [cartItems, setCartItems] = useState([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [filters, setFilters] = useState({
-    search: '',
-    minPrice: '',
-    maxPrice: '',
-    sort: ''
-  });
+  const [priceRange, setPriceRange] = useState({ min: '', max: '' });
+  const categoriesRef = useRef(null);
+  const scrollContainerRef = useRef(null);
+
+  useEffect(() => {
+    fetchCategories();
+    fetchProducts();
+  }, []);
+
+  const fetchCategories = async () => {
+    try {
+      const response = await axios.get(`${config.apiUrl}/categories`);
+      setCategories(response.data);
+      setLoading(false);
+    } catch (error) {
+      console.error('Ошибка при загрузке категорий:', error);
+      setError('Не удалось загрузить категории');
+      setLoading(false);
+    }
+  };
+
+  const fetchProducts = async () => {
+    try {
+      const response = await axios.get(`${config.apiUrl}/products`);
+      setProducts(response.data);
+    } catch (error) {
+      console.error('Ошибка при загрузке товаров:', error);
+      setError('Не удалось загрузить товары');
+    }
+  };
+
+  const handleCategoryClick = (categoryId) => {
+    setSelectedCategory(selectedCategory === categoryId ? null : categoryId);
+  };
+
+  const scroll = (direction) => {
+    const container = scrollContainerRef.current;
+    if (container) {
+      const scrollAmount = 300;
+      const newScrollPosition = container.scrollLeft + (direction === 'right' ? scrollAmount : -scrollAmount);
+      container.scrollTo({
+        left: newScrollPosition,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  const handleSearch = (event) => {
+    // Реализация поиска
+  };
+
+  const handlePriceChange = (event) => {
+    const { name, value } = event.target;
+    setPriceRange(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
 
   // Загрузка корзины из localStorage
   useEffect(() => {
@@ -101,102 +93,6 @@ const Catalog = () => {
   useEffect(() => {
     localStorage.setItem('cart', JSON.stringify(cartItems));
   }, [cartItems]);
-
-  // Загрузка товаров с сервера
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        setLoading(true);
-        let url = `${config.apiUrl}/products`;
-        
-        // Если выбрана категория, используем API для фильтрации по категории
-        if (selectedCategory) {
-          url = `${config.apiUrl}/products/category/${selectedCategory}`;
-          
-          // Добавляем параметры фильтрации и сортировки
-          const params = new URLSearchParams();
-          if (filters.search) params.append('search', filters.search);
-          if (filters.minPrice) params.append('minPrice', filters.minPrice);
-          if (filters.maxPrice) params.append('maxPrice', filters.maxPrice);
-          if (filters.sort) params.append('sort', filters.sort);
-          
-          if (params.toString()) {
-            url += `?${params.toString()}`;
-          }
-        }
-        
-        const response = await axios.get(url);
-        if (response.data.success) {
-          setProducts(response.data.products);
-          setError(null);
-        } else {
-          setError('Не удалось загрузить товары');
-        }
-      } catch (err) {
-        console.error('Ошибка при загрузке товаров:', err);
-        setError('Не удалось загрузить товары');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProducts();
-  }, [selectedCategory, filters]); // Добавляем зависимости для обновления при изменении фильтров
-
-  // Фильтрация и сортировка товаров
-  const getFilteredProducts = () => {
-    if (!Array.isArray(products)) {
-      return [];
-    }
-
-    // Если используем API для фильтрации, возвращаем продукты как есть
-    if (selectedCategory) {
-      return products;
-    }
-
-    let filteredProducts = [...products];
-
-    // Поиск по названию только если не используем API фильтрации
-    if (filters.search) {
-      const searchLower = filters.search.toLowerCase();
-      filteredProducts = filteredProducts.filter(p =>
-        p.name.toLowerCase().includes(searchLower) ||
-        p.description.toLowerCase().includes(searchLower)
-      );
-    }
-
-    // Фильтрация по цене только если не используем API фильтрации
-    if (filters.minPrice) {
-      filteredProducts = filteredProducts.filter(p => p.price >= Number(filters.minPrice));
-    }
-    if (filters.maxPrice) {
-      filteredProducts = filteredProducts.filter(p => p.price <= Number(filters.maxPrice));
-    }
-
-    // Сортировка только если не используем API фильтрации
-    if (filters.sort) {
-      const sortedProducts = [...filteredProducts];
-      switch (filters.sort) {
-        case 'price_asc':
-          sortedProducts.sort((a, b) => a.price - b.price);
-          break;
-        case 'price_desc':
-          sortedProducts.sort((a, b) => b.price - a.price);
-          break;
-        case 'name_asc':
-          sortedProducts.sort((a, b) => a.name.localeCompare(b.name));
-          break;
-        case 'name_desc':
-          sortedProducts.sort((a, b) => b.name.localeCompare(a.name));
-          break;
-        default:
-          break;
-      }
-      return sortedProducts;
-    }
-
-    return filteredProducts;
-  };
 
   const handleAddToCart = (product) => {
     setCartItems(prev => {
@@ -230,16 +126,6 @@ const Catalog = () => {
     setCartItems(prev => prev.filter(item => item.id !== productId));
   };
 
-  const handleSearch = (event) => {
-    const { value } = event.target;
-    setFilters(prev => ({ ...prev, search: value }));
-  };
-
-  const handleFilterChange = (event) => {
-    const { name, value } = event.target;
-    setFilters(prev => ({ ...prev, [name]: value }));
-  };
-
   const handleCheckoutSuccess = (order) => {
     setIsCheckoutOpen(false);
     setCartItems([]);
@@ -247,13 +133,27 @@ const Catalog = () => {
     navigate('/order-success');
   };
 
+  const filteredProducts = selectedCategory
+    ? products.filter(product => {
+        // Проверяем все возможные варианты хранения ID категории
+        const productCategoryId = 
+          product.category?._id || // если категория - это объект
+          product.category || // если категория - это просто ID
+          product.categoryId; // если мы храним ID отдельно
+        return productCategoryId === selectedCategory;
+      })
+    : products;
+
+  if (loading) return <div className="loading">Загрузка категорий...</div>;
+  if (error) return <div className="error-message">{error}</div>;
+
   return (
     <div className="catalog-container">
       <div className="catalog-filters">
         <input
           type="text"
           placeholder="Поиск товаров..."
-          value={filters.search}
+          value={priceRange.search}
           onChange={handleSearch}
           className="search-input"
         />
@@ -262,21 +162,21 @@ const Catalog = () => {
             type="number"
             placeholder="Мин. цена"
             name="minPrice"
-            value={filters.minPrice}
-            onChange={handleFilterChange}
+            value={priceRange.min}
+            onChange={handlePriceChange}
           />
           <input
             type="number"
             placeholder="Макс. цена"
             name="maxPrice"
-            value={filters.maxPrice}
-            onChange={handleFilterChange}
+            value={priceRange.max}
+            onChange={handlePriceChange}
           />
         </div>
         <select
           name="sort"
-          value={filters.sort}
-          onChange={handleFilterChange}
+          value={priceRange.sort}
+          onChange={handlePriceChange}
           className="sort-select"
         >
           <option value="">Сортировка</option>
@@ -287,35 +187,52 @@ const Catalog = () => {
         </select>
       </div>
 
-      <div className="categories-grid">
-        {categories.map(category => (
-          <div
-            key={category.id}
-            className={`category-card ${selectedCategory === category.id ? 'active' : ''}`}
-            onClick={() => setSelectedCategory(category.id)}
-          >
-            <div className="category-image">
-              <img src={category.image} alt={category.name} />
-            </div>
-            <h2 className="category-name">{category.name}</h2>
+      <div className="catalog-categories">
+        <button className="scroll-button left" onClick={() => scroll('left')}>
+          <i className="fas fa-chevron-left"></i>
+        </button>
+        
+        <div className="categories-scroll-container" ref={scrollContainerRef}>
+          <div className="categories-row">
+            {categories.map(category => (
+              <div
+                key={category._id}
+                className={`catalog-category-card ${selectedCategory === category._id ? 'active' : ''}`}
+                onClick={() => handleCategoryClick(category._id)}
+              >
+                <img
+                  src={category.image}
+                  alt={category.name}
+                  className="catalog-category-image"
+                />
+                <div className="catalog-category-content">
+                  <h3 className="catalog-category-name">{category.name}</h3>
+                  <p className="catalog-category-description">{category.description}</p>
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
+        </div>
+
+        <button className="scroll-button right" onClick={() => scroll('right')}>
+          <i className="fas fa-chevron-right"></i>
+        </button>
       </div>
 
       {loading ? (
         <div className="loading">Загрузка...</div>
       ) : error ? (
         <div className="error">{error}</div>
-      ) : products.length === 0 ? (
+      ) : filteredProducts.length === 0 ? (
         <div className="empty-products">
           <h3>Товары не найдены</h3>
           <p>Попробуйте изменить параметры поиска или фильтры</p>
         </div>
       ) : (
         <div className="products-grid">
-          {getFilteredProducts().map(product => (
+          {filteredProducts.map((product, index) => (
             <ProductCard
-              key={product.id}
+              key={product._id}
               product={product}
               onAddToCart={handleAddToCart}
             />

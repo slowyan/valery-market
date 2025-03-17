@@ -1,17 +1,14 @@
-const path = require('path');
-require('dotenv').config({
-  path: process.env.NODE_ENV === 'development' 
-    ? path.join(__dirname, '.env.development')
-    : path.join(__dirname, '.env')
-});
+require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const path = require('path');
 const config = require('./config');
-const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/user');
 const orderRoutes = require('./routes/orderRoutes');
 const productRoutes = require('./routes/productRoutes');
+const categoryRoutes = require('./routes/categoryRoutes');
+const authRoutes = require('./routes/authRoutes');
 
 const app = express();
 
@@ -27,6 +24,9 @@ app.use(express.json());
 // Статическая раздача файлов из директории uploads
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// Статическая раздача файлов из директории public
+app.use(express.static(path.join(__dirname, 'public')));
+
 // Логирование запросов
 app.use((req, res, next) => {
   console.log(`${req.method} ${req.path}`, req.body);
@@ -34,10 +34,11 @@ app.use((req, res, next) => {
 });
 
 // Маршруты
-app.use('/api/auth', authRoutes);
-app.use('/api/user', userRoutes);
-app.use('/api/orders', orderRoutes);
 app.use('/api/products', productRoutes);
+app.use('/api/categories', categoryRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/orders', orderRoutes);
+app.use('/api/user', userRoutes);
 
 // Обработка ошибок
 app.use((err, req, res, next) => {

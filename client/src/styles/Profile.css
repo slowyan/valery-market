@@ -127,3 +127,7 @@
         flex-direction: column;
     }
 } 
+
+td .edit-button {
+    width: auto;
+}
