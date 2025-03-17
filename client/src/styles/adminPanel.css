@@ -473,4 +473,19 @@ tr:hover {
 .action-buttons {
   display: flex;
   gap: 8px;
-} 
+}
+
+@media (max-width: 540px) {
+  .product-card img{
+    height: 100px;
+  }
+
+  .product-card h3 {
+    font-size: 0.8rem;
+  }
+
+  .product-card p {
+    font-size: 0.7rem;
+  }
+  
+}

@@ -96,10 +96,10 @@ const Catalog = () => {
 
   const handleAddToCart = (product) => {
     setCartItems(prev => {
-      const existingItem = prev.find(item => item.id === product.id);
+      const existingItem = prev.find(item => item._id === product._id);
       if (existingItem) {
         return prev.map(item =>
-          item.id === product.id
+          item._id === product._id
             ? { ...item, quantity: item.quantity + 1 }
             : item
         );
@@ -110,11 +110,11 @@ const Catalog = () => {
 
   const handleUpdateQuantity = (productId, newQuantity) => {
     if (newQuantity === 0) {
-      setCartItems(prev => prev.filter(item => item.id !== productId));
+      setCartItems(prev => prev.filter(item => item._id !== productId));
     } else {
       setCartItems(prev =>
         prev.map(item =>
-          item.id === productId
+          item._id === productId
             ? { ...item, quantity: newQuantity }
             : item
         )
@@ -123,7 +123,7 @@ const Catalog = () => {
   };
 
   const handleRemoveFromCart = (productId) => {
-    setCartItems(prev => prev.filter(item => item.id !== productId));
+    setCartItems(prev => prev.filter(item => item._id !== productId));
   };
 
   const handleCheckoutSuccess = (order) => {
