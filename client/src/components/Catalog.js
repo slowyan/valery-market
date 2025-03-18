@@ -19,6 +19,8 @@ const Catalog = () => {
   const [cartItems, setCartItems] = useState([]);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [priceRange, setPriceRange] = useState({ min: '', max: '' });
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortOption, setSortOption] = useState('default');
   const categoriesRef = useRef(null);
   const scrollContainerRef = useRef(null);
 
@@ -138,16 +140,76 @@ const Catalog = () => {
     localStorage.removeItem('cart');
   };
 
-  const filteredProducts = selectedCategory
-    ? products.filter(product => {
-        // Проверяем все возможные варианты хранения ID категории
-        const productCategoryId = 
-          product.category?._id || // если категория - это объект
-          product.category || // если категория - это просто ID
-          product.categoryId; // если мы храним ID отдельно
-        return productCategoryId === selectedCategory;
-      })
-    : products;
+  const getFilteredAndSortedProducts = () => {
+    let filtered = products;
+
+    if (selectedCategory) {
+      filtered = filtered.filter(product => product.category === selectedCategory);
+    }
+
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(product => 
+        product.name.toLowerCase().includes(query) ||
+        product.description.toLowerCase().includes(query)
+      );
+    }
+
+    if (priceRange.min !== '') {
+      filtered = filtered.filter(product => {
+        const finalPrice = product.discount 
+          ? product.price * (1 - product.discount / 100)
+          : product.price;
+        return finalPrice >= Number(priceRange.min);
+      });
+    }
+    if (priceRange.max !== '') {
+      filtered = filtered.filter(product => {
+        const finalPrice = product.discount 
+          ? product.price * (1 - product.discount / 100)
+          : product.price;
+        return finalPrice <= Number(priceRange.max);
+      });
+    }
+
+    switch (sortOption) {
+      case 'price-asc':
+        filtered.sort((a, b) => {
+          const priceA = a.discount ? a.price * (1 - a.discount / 100) : a.price;
+          const priceB = b.discount ? b.price * (1 - b.discount / 100) : b.price;
+          return priceA - priceB;
+        });
+        break;
+      case 'price-desc':
+        filtered.sort((a, b) => {
+          const priceA = a.discount ? a.price * (1 - a.discount / 100) : a.price;
+          const priceB = b.discount ? b.price * (1 - b.discount / 100) : b.price;
+          return priceB - priceA;
+        });
+        break;
+      case 'name-asc':
+        filtered.sort((a, b) => a.name.localeCompare(b.name));
+        break;
+      case 'name-desc':
+        filtered.sort((a, b) => b.name.localeCompare(a.name));
+        break;
+      default:
+        // По умолчанию сортировка по id или дате добавления
+        break;
+    }
+
+    return filtered;
+  };
+
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+  };
+
+  const handleSortChange = (e) => {
+    setSortOption(e.target.value);
+  };
+
+  const filteredProducts = getFilteredAndSortedProducts();
 
   if (loading) return <div className="loading">Загрузка категорий...</div>;
   if (error) return <div className="error-message">{error}</div>;
@@ -158,37 +220,36 @@ const Catalog = () => {
         <input
           type="text"
           placeholder="Поиск товаров..."
-          value={priceRange.search}
-          onChange={handleSearch}
+          value={searchQuery}
+          onChange={handleSearchChange}
           className="search-input"
         />
         <div className="price-filters">
           <input
             type="number"
             placeholder="Мин. цена"
-            name="minPrice"
+            name="min"
             value={priceRange.min}
             onChange={handlePriceChange}
           />
           <input
             type="number"
             placeholder="Макс. цена"
-            name="maxPrice"
+            name="max"
             value={priceRange.max}
             onChange={handlePriceChange}
           />
         </div>
         <select
-          name="sort"
-          value={priceRange.sort}
-          onChange={handlePriceChange}
+          value={sortOption}
+          onChange={handleSortChange}
           className="sort-select"
         >
-          <option value="">Сортировка</option>
-          <option value="price_asc">Цена: по возрастанию</option>
-          <option value="price_desc">Цена: по убыванию</option>
-          <option value="name_asc">Название: А-Я</option>
-          <option value="name_desc">Название: Я-А</option>
+          <option value="default">По умолчанию</option>
+          <option value="price-asc">Цена: по возрастанию</option>
+          <option value="price-desc">Цена: по убыванию</option>
+          <option value="name-asc">Название: А-Я</option>
+          <option value="name-desc">Название: Я-А</option>
         </select>
       </div>
 
@@ -223,6 +284,12 @@ const Catalog = () => {
           <i className="fas fa-chevron-right"></i>
         </button>
       </div>
+
+      {searchQuery && (
+        <div className="results-info">
+          <p>Найдено товаров: {filteredProducts.length}</p>
+        </div>
+      )}
 
       {loading ? (
         <div className="loading">Загрузка...</div>
