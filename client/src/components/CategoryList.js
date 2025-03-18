@@ -8,17 +8,18 @@ import CategoryForm from './CategoryForm';
 const CategoryCard = memo(({ category, onEdit, onDelete, onMoveUp, onMoveDown, isFirst, isLast, index }) => {
   const [imgSrc, setImgSrc] = useState(
     category.image 
-      ? `${config.baseUrl}${category.image}`
-      : `${config.baseUrl}/images/placeholder.webp`
+      ? `${config.baseUrl}${category.image.startsWith('/') ? '' : '/'}${category.image}`
+      : `${config.baseUrl}/uploads/placeholder.jpg`
   );
 
   const handleImageError = useCallback(() => {
-    setImgSrc(`${config.baseUrl}/images/placeholder.webp`);
-  }, []);
+    console.log('Image load error for:', imgSrc);
+    setImgSrc(`${config.baseUrl}/uploads/placeholder.jpg`);
+  }, [imgSrc]);
 
   // Используем простой строковый ID
   const id = category._id;
-  console.log('Rendering card with ID:', id); // Отладочный вывод
+  console.log('Rendering card with ID:', id, 'Image URL:', imgSrc);
 
   return (
     <div className="admin-category-card">
