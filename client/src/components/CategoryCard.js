@@ -7,30 +7,15 @@ const CategoryCard = ({ category }) => {
   const { _id, name, image, description } = category;
 
   // Формируем полный путь к изображению
-  const imageUrl = image 
-    ? (image.startsWith('http') 
-        ? image 
-        : `${config.baseUrl}${image.startsWith('/') ? '' : '/'}${image}`)
-    : `${config.baseUrl}/uploads/placeholder.jpg`;
-  
-  // Отладочная информация
-  console.log('Category:', category);
-  console.log('Config:', config);
-  console.log('Image path:', image);
-  console.log('Full image URL:', imageUrl);
+  const imageUrl = image ? `${config.uploadsUrl}/${image}` : '/placeholder.jpg';
 
   return (
     <Link to={`/category/${_id}`} className="category-card">
       <div className="category-image">
-        <img 
-          src={imageUrl} 
-          alt={name} 
-          onError={(e) => {
-            console.log('Image load error for:', e.target.src);
-            e.target.src = `${config.baseUrl}/uploads/placeholder.jpg`;
-            e.target.onerror = null;
-          }} 
-        />
+        <img src={imageUrl} alt={name} onError={(e) => {
+          e.target.src = '/placeholder.jpg';
+          e.target.onerror = null;
+        }} />
       </div>
       <div className="category-info">
         <h3>{name}</h3>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import ProductCard from './ProductCard';
 import Cart from './Cart';
 import CheckoutForm from './CheckoutForm';
@@ -7,40 +7,6 @@ import '../styles/catalog.css';
 import axios from 'axios';
 import config from '../config';
 import '../styles/catalog.css';
-
-const CategoryCard = ({ category }) => {
-  const [imgSrc, setImgSrc] = useState(() => {
-    if (!category.image) return `${config.baseUrl}/uploads/placeholder.jpg`;
-    const imagePath = category.image.startsWith('/') ? category.image : `/${category.image}`;
-    return `${config.baseUrl}${imagePath}`;
-  });
-
-  const handleImageError = () => {
-    console.log('Image load error for:', imgSrc);
-    setImgSrc(`${config.baseUrl}/uploads/placeholder.jpg`);
-  };
-
-  const handleClick = () => {
-    // Здесь можно добавить логику обработки клика на категорию
-    console.log('Clicked category:', category.name);
-  };
-
-  return (
-    <div onClick={handleClick} className="catalog-category-card">
-      <div className="catalog-category-image">
-        <img 
-          src={imgSrc} 
-          alt={category.name} 
-          onError={handleImageError}
-        />
-      </div>
-      <div className="catalog-category-content">
-        <h3>{category.name}</h3>
-        {category.description && <p>{category.description}</p>}
-      </div>
-    </div>
-  );
-};
 
 const Catalog = () => {
   const navigate = useNavigate();
@@ -295,7 +261,21 @@ const Catalog = () => {
         <div className="categories-scroll-container" ref={scrollContainerRef}>
           <div className="categories-row">
             {categories.map(category => (
-              <CategoryCard key={category._id} category={category} />
+              <div
+                key={category._id}
+                className={`catalog-category-card ${selectedCategory === category._id ? 'active' : ''}`}
+                onClick={() => handleCategoryClick(category._id)}
+              >
+                <img
+                  src={category.image}
+                  alt={category.name}
+                  className="catalog-category-image"
+                />
+                <div className="catalog-category-content">
+                  <h3 className="catalog-category-name">{category.name}</h3>
+                  <p className="catalog-category-description">{category.description}</p>
+                </div>
+              </div>
             ))}
           </div>
         </div>

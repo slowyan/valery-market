@@ -6,20 +6,19 @@ import CategoryForm from './CategoryForm';
 
 // Мемоизированная карточка категории
 const CategoryCard = memo(({ category, onEdit, onDelete, onMoveUp, onMoveDown, isFirst, isLast, index }) => {
-  const [imgSrc, setImgSrc] = useState(() => {
-    if (!category.image) return `${config.baseUrl}/uploads/placeholder.jpg`;
-    const imagePath = category.image.startsWith('/') ? category.image : `/${category.image}`;
-    return `${config.baseUrl}${imagePath}`;
-  });
+  const [imgSrc, setImgSrc] = useState(
+    category.image 
+      ? `${config.baseUrl}${category.image}`
+      : `${config.baseUrl}/images/placeholder.webp`
+  );
 
   const handleImageError = useCallback(() => {
-    console.log('Image load error for:', imgSrc);
-    setImgSrc(`${config.baseUrl}/uploads/placeholder.jpg`);
-  }, [imgSrc]);
+    setImgSrc(`${config.baseUrl}/images/placeholder.webp`);
+  }, []);
 
   // Используем простой строковый ID
   const id = category._id;
-  console.log('Rendering card with ID:', id, 'Image URL:', imgSrc);
+  console.log('Rendering card with ID:', id); // Отладочный вывод
 
   return (
     <div className="admin-category-card">
