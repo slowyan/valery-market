@@ -9,19 +9,24 @@ import config from '../config';
 import '../styles/catalog.css';
 
 const CategoryCard = ({ category }) => {
-  const [imgSrc, setImgSrc] = useState(
-    category.image 
-      ? `${config.baseUrl}${category.image.startsWith('/') ? '' : '/'}${category.image}`
-      : `${config.baseUrl}/uploads/placeholder.jpg`
-  );
+  const [imgSrc, setImgSrc] = useState(() => {
+    if (!category.image) return `${config.baseUrl}/uploads/placeholder.jpg`;
+    const imagePath = category.image.startsWith('/') ? category.image : `/${category.image}`;
+    return `${config.baseUrl}${imagePath}`;
+  });
 
   const handleImageError = () => {
     console.log('Image load error for:', imgSrc);
     setImgSrc(`${config.baseUrl}/uploads/placeholder.jpg`);
   };
 
+  const handleClick = () => {
+    // Здесь можно добавить логику обработки клика на категорию
+    console.log('Clicked category:', category.name);
+  };
+
   return (
-    <Link to={`/category/${category._id}`} className="catalog-category-card">
+    <div onClick={handleClick} className="catalog-category-card">
       <div className="catalog-category-image">
         <img 
           src={imgSrc} 
@@ -33,7 +38,7 @@ const CategoryCard = ({ category }) => {
         <h3>{category.name}</h3>
         {category.description && <p>{category.description}</p>}
       </div>
-    </Link>
+    </div>
   );
 };
 

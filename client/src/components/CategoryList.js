@@ -6,11 +6,11 @@ import CategoryForm from './CategoryForm';
 
 // Мемоизированная карточка категории
 const CategoryCard = memo(({ category, onEdit, onDelete, onMoveUp, onMoveDown, isFirst, isLast, index }) => {
-  const [imgSrc, setImgSrc] = useState(
-    category.image 
-      ? `${config.baseUrl}${category.image.startsWith('/') ? '' : '/'}${category.image}`
-      : `${config.baseUrl}/uploads/placeholder.jpg`
-  );
+  const [imgSrc, setImgSrc] = useState(() => {
+    if (!category.image) return `${config.baseUrl}/uploads/placeholder.jpg`;
+    const imagePath = category.image.startsWith('/') ? category.image : `/${category.image}`;
+    return `${config.baseUrl}${imagePath}`;
+  });
 
   const handleImageError = useCallback(() => {
     console.log('Image load error for:', imgSrc);
