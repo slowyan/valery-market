@@ -6,7 +6,7 @@ const development = {
     jwtSecret: process.env.JWT_SECRET,
     // Добавьте здесь конфигурацию для SMS-сервиса
     sms: {
-        enabled: true,
+        enabled: false,
         provider: 'sms.ru',
         apiKey: process.env.SMS_RU_API_KEY
     }
