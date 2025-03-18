@@ -226,22 +226,22 @@ const updateCategoriesOrder = async (req, res) => {
     }
 
     // Обновляем порядок для каждой категории
-    const bulkOps = categories.map((cat, index) => ({
-      updateOne: {
-        filter: { _id: cat._id },
-        update: { $set: { order: index } }
-      }
-    }));
+    const updatePromises = categories.map((cat, index) => {
+      console.log(`Обновление категории ${cat._id} на позицию ${index}`);
+      return Category.findByIdAndUpdate(
+        cat._id,
+        { order: index },
+        { new: true }
+      );
+    });
 
-    console.log('Операции обновления:', bulkOps);
-
-    await Category.bulkWrite(bulkOps);
+    const updatedCategories = await Promise.all(updatePromises);
+    console.log('Категории успешно обновлены:', 
+      updatedCategories.map(cat => ({ _id: cat._id, name: cat.name, order: cat.order }))
+    );
 
     // Получаем обновленный список категорий
     const sortedCategories = await Category.find().sort({ order: 1 });
-    console.log('Обновленный порядок категорий:', 
-      sortedCategories.map(cat => ({ _id: cat._id, name: cat.name, order: cat.order }))
-    );
 
     res.json({
       success: true,

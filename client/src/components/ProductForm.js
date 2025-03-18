@@ -13,7 +13,8 @@ const ProductForm = ({ onSubmit, onCancel, initialData }) => {
     inStock: true,
     infiniteStock: false,
     discount: 0,
-    specifications: []
+    specifications: [],
+    quantity: 0
   });
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -40,7 +41,8 @@ const ProductForm = ({ onSubmit, onCancel, initialData }) => {
         inStock: initialData.inStock ?? true,
         infiniteStock: initialData.infiniteStock ?? false,
         discount: initialData.discount || 0,
-        specifications: initialData.specifications || []
+        specifications: initialData.specifications || [],
+        quantity: initialData.quantity || 0
       });
 
       // Если есть изображение, устанавливаем его предпросмотр
@@ -88,7 +90,7 @@ const ProductForm = ({ onSubmit, onCancel, initialData }) => {
 
   const removeSpecification = (index) => {
     setFormData(prev => ({
-      ...prev,
+        ...prev,
       specifications: prev.specifications.filter((_, i) => i !== index)
     }));
   };
@@ -121,28 +123,31 @@ const ProductForm = ({ onSubmit, onCancel, initialData }) => {
   };
 
   const removeImage = (index) => {
-    setImagePreviews(prev => {
-      const newPreviews = [...prev];
-      const removedPreview = newPreviews[index];
-      
-      // Если это локальный URL, освобождаем его
-      if (removedPreview && !removedPreview.startsWith(config.baseUrl)) {
-        URL.revokeObjectURL(removedPreview);
-      }
-      
-      newPreviews.splice(index, 1);
-      return newPreviews;
-    });
-
-    setImageFiles(prev => {
-      const newFiles = [...prev];
-      newFiles.splice(index, 1);
-      return newFiles;
-    });
-
-    // Если это существующее изображение, помечаем его для удаления
+    // Если это существующее изображение продукта
     if (initialData && initialData.image) {
       setImageToDelete(true);
+      setImagePreviews([]); // Очищаем превью
+      setImageFiles([]); // Очищаем файлы
+    } else {
+      // Если это новое изображение
+      setImagePreviews(prev => {
+        const newPreviews = [...prev];
+        const removedPreview = newPreviews[index];
+        
+        // Если это локальный URL, освобождаем его
+        if (removedPreview && !removedPreview.startsWith(config.baseUrl)) {
+          URL.revokeObjectURL(removedPreview);
+        }
+        
+        newPreviews.splice(index, 1);
+        return newPreviews;
+      });
+
+      setImageFiles(prev => {
+        const newFiles = [...prev];
+        newFiles.splice(index, 1);
+        return newFiles;
+      });
     }
   };
 
@@ -202,6 +207,8 @@ const ProductForm = ({ onSubmit, onCancel, initialData }) => {
       submitData.append('inStock', formData.inStock);
       submitData.append('infiniteStock', formData.infiniteStock);
       submitData.append('discount', formData.discount);
+      submitData.append('specifications', JSON.stringify(formData.specifications));
+      submitData.append('quantity', formData.quantity);
 
       // Если нужно удалить существующее изображение
       if (imageToDelete) {
@@ -243,7 +250,8 @@ const ProductForm = ({ onSubmit, onCancel, initialData }) => {
           inStock: true,
           infiniteStock: false,
           discount: 0,
-          specifications: []
+          specifications: [],
+          quantity: 0
         });
         setSelectedFiles([]);
         setImagePreviews([]);
@@ -416,6 +424,28 @@ const ProductForm = ({ onSubmit, onCancel, initialData }) => {
           <span>Бесконечное количество</span>
         </label>
       </div>
+
+      {formData.inStock && !formData.infiniteStock && (
+        <div className="form-group">
+          <label htmlFor="quantity">Количество товара</label>
+          <input
+            type="number"
+            id="quantity"
+            name="quantity"
+            value={formData.quantity}
+            onChange={(e) => {
+              const value = parseInt(e.target.value) || 0;
+              setFormData({ 
+                ...formData, 
+                quantity: Math.max(1, value),
+                inStock: value > 0
+              });
+            }}
+            min="1"
+            required
+          />
+        </div>
+      )}
 
       <div className="form-group">
         <label>

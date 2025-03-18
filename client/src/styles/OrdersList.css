@@ -3,58 +3,129 @@
   background: white;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow-x: auto;
 }
 
 .orders-list h2 {
   margin-bottom: 20px;
   color: #333;
+  position: sticky;
+  left: 0;
+  background: white;
+  padding: 10px 0;
+  z-index: 1;
 }
 
 .orders-list table {
   width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
   border-collapse: collapse;
+  margin-top: 20px;
 }
 
 .orders-list th,
 .orders-list td {
   padding: 12px;
   text-align: left;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid #ddd;
 }
 
 .orders-list th {
+  background-color: #f5f5f5;
   font-weight: 600;
-  color: #666;
-  background-color: #f8f9fa;
 }
 
 .orders-list tr:hover {
+  background-color: #f9f9f9;
+}
+
+.order-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  margin: 5px 0;
   background-color: #f8f9fa;
+  border-radius: 6px;
+  border-left: 4px solid #1976d2;
+  transition: all 0.2s ease;
+}
+
+.order-item:hover {
+  background-color: #eef2f6;
+  transform: translateX(2px);
+}
+
+.order-item-name {
+  flex: 1;
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+.order-item-quantity {
+  margin: 0 12px;
+  padding: 2px 8px;
+  background-color: #e3f2fd;
+  color: #1976d2;
+  border-radius: 12px;
+  font-size: 0.9em;
+  font-weight: 500;
+}
+
+.order-item-price {
+  color: #2e7d32;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.order-items-container {
+  max-height: 200px;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+.order-items-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.order-items-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.order-items-container::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.order-items-container::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
 }
 
 .status {
   display: inline-block;
-  padding: 4px 8px;
+  padding: 6px 12px;
   border-radius: 4px;
-  font-size: 0.9em;
+  font-weight: 500;
 }
 
-.status-new {
+.status.new {
   background-color: #e3f2fd;
   color: #1976d2;
 }
 
-.status-processing {
+.status.processing {
   background-color: #fff3e0;
   color: #f57c00;
 }
 
-.status-completed {
+.status.completed {
   background-color: #e8f5e9;
   color: #2e7d32;
 }
 
-.status-cancelled {
+.status.cancelled {
   background-color: #ffebee;
   color: #c62828;
 }
@@ -64,26 +135,113 @@
   border: 1px solid #ddd;
   border-radius: 4px;
   background-color: white;
-  font-size: 0.9em;
   cursor: pointer;
 }
 
 .orders-list select:hover {
-  border-color: #aaa;
+  border-color: #999;
+}
+
+.orders-list select:focus {
+  outline: none;
+  border-color: #1976d2;
+  box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
 }
 
 .loading {
   text-align: center;
-  padding: 40px;
+  padding: 20px;
+  font-size: 18px;
   color: #666;
 }
 
 .error-message {
-  color: #dc3545;
-  background-color: #f8d7da;
-  border: 1px solid #f5c6cb;
-  padding: 10px;
+  color: #d32f2f;
+  padding: 20px;
+  text-align: center;
+  background-color: #ffebee;
   border-radius: 4px;
-  margin-bottom: 20px;
+  margin: 20px 0;
+}
+
+.no-orders {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+  font-size: 16px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+}
+
+.order-date {
+  white-space: nowrap;
+  color: #666;
+  font-size: 0.9em;
+}
+
+.date-time {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.contact-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.9em;
+}
+
+.contact-info .phone {
+  color: #1976d2;
+}
+
+.contact-info .email {
+  color: #666;
+  word-break: break-all;
+}
+
+/* Добавляем стили для адреса */
+.orders-list td[title] {
+  cursor: help;
+}
+
+/* Стили для заголовка таблицы */
+.orders-list thead th {
+  background-color: #F8F9FA;
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* Улучшаем читаемость строк */
+.orders-list tbody tr:nth-child(even) {
+  background-color: #fafafa;
+}
+
+.orders-list tbody tr:hover {
+  background-color: #f5f5f5;
+}
+
+/* Стили для скроллбара таблицы */
+.orders-list::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+
+.orders-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.orders-list::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.orders-list::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
 } 
  

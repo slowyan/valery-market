@@ -15,8 +15,8 @@ const Catalog = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const [showCart, setShowCart] = useState(false);
   const [cartItems, setCartItems] = useState([]);
-  const [isCartOpen, setIsCartOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [priceRange, setPriceRange] = useState({ min: '', max: '' });
   const categoriesRef = useRef(null);
@@ -133,6 +133,11 @@ const Catalog = () => {
     navigate('/order-success');
   };
 
+  const clearCart = () => {
+    setCartItems([]);
+    localStorage.removeItem('cart');
+  };
+
   const filteredProducts = selectedCategory
     ? products.filter(product => {
         // Проверяем все возможные варианты хранения ID категории
@@ -241,7 +246,7 @@ const Catalog = () => {
       )}
 
       {cartItems.length > 0 && (
-        <div className="cart-preview" onClick={() => setIsCartOpen(true)}>
+        <div className="cart-preview" onClick={() => setShowCart(true)}>
           <h3>Корзина ({cartItems.reduce((acc, item) => acc + item.quantity, 0)})</h3>
           <button 
             className="checkout-button"
@@ -255,13 +260,14 @@ const Catalog = () => {
         </div>
       )}
 
-      {isCartOpen && (
+      {showCart && (
         <Cart
           items={cartItems}
           onUpdateQuantity={handleUpdateQuantity}
           onRemoveItem={handleRemoveFromCart}
-          onClose={() => setIsCartOpen(false)}
           onCheckout={() => setIsCheckoutOpen(true)}
+          onClose={() => setShowCart(false)}
+          clearCart={clearCart}
         />
       )}
 

@@ -1,14 +1,17 @@
-import React from 'react';
+import React, { useState } from 'react';
 import config from '../config';
 import '../styles/Cart.css';
+import OrderSuccess from '../pages/OrderSuccess';
+import axios from 'axios';
 
-const Cart = ({ items, onUpdateQuantity, onRemoveItem, onCheckout, onClose }) => {
+const Cart = ({ items, onUpdateQuantity, onRemoveItem, onCheckout, onClose, clearCart }) => {
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [error, setError] = useState(null);
   const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   const getImageUrl = (item) => {
-    if (item.images && item.images.length > 0) {
-      const imagePath = item.images[0];
-      return imagePath.startsWith('http') ? imagePath : `${config.baseUrl}${imagePath}`;
+    if (item.image) {
+      return item.image.startsWith('http') ? item.image : `${config.baseUrl}${item.image}`;
     }
     return '/placeholder.jpg';
   };
@@ -17,6 +20,27 @@ const Cart = ({ items, onUpdateQuantity, onRemoveItem, onCheckout, onClose }) =>
     return price.toLocaleString('ru-RU');
   };
 
+  const handleSubmitOrder = async (orderData) => {
+    try {
+      const response = await axios.post(`${config.apiUrl}/orders`, orderData);
+      
+      if (response.data.success) {
+        setShowSuccess(true);
+        clearCart();
+      } else {
+        throw new Error(response.data.message || 'Ошибка при оформлении заказа');
+      }
+    } catch (error) {
+      console.error('Ошибка при оформлении заказа:', error);
+      setError(error.message || 'Ошибка при оформлении заказа');
+    }
+  };
+
+  // Если заказ успешно оформлен, показываем уведомление
+  if (showSuccess) {
+    return <OrderSuccess />;
+  }
+
   return (
     <div className="cart-modal">
       <div className="cart-content">
@@ -24,6 +48,8 @@ const Cart = ({ items, onUpdateQuantity, onRemoveItem, onCheckout, onClose }) =>
           <h2>Корзина</h2>
           <button className="close-button" onClick={onClose}>✕</button>
         </div>
+        
+        {error && <div className="error-message">{error}</div>}
         
         {items.length === 0 ? (
           <p className="empty-cart">Корзина пуста</p>

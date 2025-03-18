@@ -33,19 +33,53 @@ const productSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  quantity: {
+    type: Number,
+    default: 0,
+    min: [1, 'Минимальное количество товара - 1 штука'],
+    validate: {
+      validator: function(v) {
+        // Если товар не в бесконечном количестве, проверяем минимальное значение
+        if (!this.infiniteStock) {
+          return v >= 1;
+        }
+        return true;
+      },
+      message: 'Минимальное количество товара - 1 штука'
+    }
+  },
   discount: {
     type: Number,
     min: [0, 'Скидка не может быть отрицательной'],
     max: [100, 'Скидка не может быть больше 100%'],
     default: 0
-  }
+  },
+  specifications: [{
+    name: String,
+    value: String
+  }]
 }, {
   timestamps: true
 });
 
-// Middleware для обновления updatedAt перед сохранением
+// Middleware для обновления updatedAt и статуса наличия перед сохранением
 productSchema.pre('save', function(next) {
   this.updatedAt = Date.now();
+  
+  // Если товар не в бесконечном количестве, проверяем его наличие
+  if (!this.infiniteStock) {
+    this.inStock = this.quantity > 0;
+  }
+  
+  next();
+});
+
+// Middleware для обновления статуса наличия при обновлении количества
+productSchema.pre('findOneAndUpdate', function(next) {
+  const update = this.getUpdate();
+  if (update && typeof update.quantity !== 'undefined' && !update.infiniteStock) {
+    update.inStock = update.quantity > 0;
+  }
   next();
 });
 

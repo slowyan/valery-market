@@ -9,9 +9,9 @@ const {
 } = require('../controllers/orderController');
 
 // Маршруты для администратора
-router.get('/', isAdmin, getAllOrders);
-router.get('/:id', isAdmin, getOrderDetails);
-router.put('/:id/status', isAdmin, updateOrderStatus);
+router.get('/admin', isAdmin, getAllOrders);
+router.get('/admin/:id', isAdmin, getOrderDetails);
+router.put('/admin/:id/status', isAdmin, updateOrderStatus);
 
 // Публичные маршруты
 router.post('/', createOrder);

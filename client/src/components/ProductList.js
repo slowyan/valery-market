@@ -180,6 +180,7 @@ const ProductList = () => {
                 <th>Название</th>
                 <th>Категория</th>
                 <th>Цена</th>
+                <th>Количество</th>
                 <th>Действия</th>
               </tr>
             </thead>
@@ -202,6 +203,15 @@ const ProductList = () => {
                   <td>{product.name}</td>
                   <td>{product.category?.name || 'Без категории'}</td>
                   <td>{formatPrice(product.price)} ₽</td>
+                  <td>
+                    {product.infiniteStock ? (
+                      <span className="infinite-stock">∞</span>
+                    ) : (
+                      <span className={`quantity ${product.quantity === 0 ? 'out-of-stock' : ''}`}>
+                        {product.quantity}
+                      </span>
+                    )}
+                  </td>
                   <td>
                     <button
                       onClick={() => {

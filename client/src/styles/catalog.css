@@ -373,7 +373,7 @@ h1 {
 .product-description {
 	font-size: 14px;
 	color: #666;
-	margin: 0 0 16px 0;
+	margin: 0 0 16px;
 	line-height: 1.5;
 	flex-grow: 1;
 	display: -webkit-box;
@@ -393,6 +393,7 @@ h1 {
 }
 
 .product-price {
+	font-weight: 600;
 	display: flex;
 	flex-direction: column;
 	gap: 4px;
@@ -648,7 +649,7 @@ h1 {
 /* Анимация для продуктов */
 .products-grid {
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+	grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
 	gap: 20px;
 	padding: 20px;
 	transition: opacity 0.3s ease;

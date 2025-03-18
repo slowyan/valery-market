@@ -7,14 +7,32 @@ const orderController = {
   getAllOrders: async (req, res) => {
     try {
       const orders = await Order.find()
-        .populate('user', 'name email')
-        .populate('items.product', 'name price images')
+        .populate({
+          path: 'items.product',
+          select: 'name price image quantity inStock infiniteStock'
+        })
         .sort({ createdAt: -1 });
       
-      res.json(orders);
+      res.json({
+        success: true,
+        orders: orders.map(order => ({
+          ...order.toObject(),
+          createdAt: order.createdAt,
+          formattedDate: new Date(order.createdAt).toLocaleString('ru-RU', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          })
+        }))
+      });
     } catch (error) {
       console.error('Ошибка при получении заказов:', error);
-      res.status(500).json({ message: 'Ошибка при получении списка заказов' });
+      res.status(500).json({ 
+        success: false,
+        message: 'Ошибка при получении списка заказов' 
+      });
     }
   },
 
@@ -65,35 +83,44 @@ const orderController = {
 
       const formattedItems = [];
       for (const item of items) {
-        const product = await Product.findById(item.productId || item.id);
+        const product = await Product.findById(item.productId);
         if (!product) {
           return res.status(400).json({
             success: false,
             message: `Товар ${item.name} не найден`
           });
         }
-        if (!product.isAvailable) {
-          return res.status(400).json({
-            success: false,
-            message: `Товар ${product.name} недоступен для заказа`
-          });
+
+        if (!product.infiniteStock) {
+          if (!product.inStock || product.quantity < item.quantity) {
+            return res.status(400).json({
+              success: false,
+              message: `Товар ${product.name} недоступен в запрошенном количестве. Доступно: ${product.quantity}`
+            });
+          }
+
+          product.quantity -= item.quantity;
+          product.inStock = product.quantity > 0;
+          await product.save();
+
+          console.log(`Обновлено количество товара ${product.name}: ${product.quantity}`);
         }
+
         formattedItems.push({
-          productId: product._id,
-          name: product.name,
-          price: product.price,
+          product: product._id,
           quantity: item.quantity,
-          discount: item.discount || 0
+          price: item.price
         });
       }
 
       const order = new Order({
-        userId,
+        customerName: shippingAddress.customerName,
+        email: shippingAddress.email,
+        phone: contactPhone,
+        address: `${shippingAddress.city}, ${shippingAddress.street}, д. ${shippingAddress.house}${shippingAddress.apartment ? `, кв. ${shippingAddress.apartment}` : ''}, ${shippingAddress.postalCode}`,
         items: formattedItems,
         totalAmount,
-        shippingAddress,
-        contactPhone,
-        status: 'pending'
+        status: 'new'
       });
 
       await order.save();

@@ -68,6 +68,24 @@ th {
   object-fit: contain;
 }
 
+.infinite-stock {
+  font-size: 24px;
+  color: #3498db;
+  font-weight: bold;
+}
+
+.quantity {
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background-color: #f8f9fa;
+}
+
+.quantity.out-of-stock {
+  color: #e74c3c;
+  background-color: #fde8e7;
+}
+
 .edit-button,
 .delete-button {
   padding: 8px 16px;

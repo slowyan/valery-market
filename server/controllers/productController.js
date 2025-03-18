@@ -130,7 +130,9 @@ const createProduct = async (req, res) => {
       category,
       inStock,
       infiniteStock,
-      discount
+      discount,
+      quantity,
+      specifications
     } = req.body;
 
     // Проверяем обязательные поля
@@ -149,6 +151,11 @@ const createProduct = async (req, res) => {
       });
     }
 
+    // Обработка статуса наличия и количества
+    const isInfiniteStock = infiniteStock === 'true';
+    const productQuantity = !isInfiniteStock ? Math.max(1, parseInt(quantity) || 0) : 0;
+    const isInStock = isInfiniteStock || productQuantity > 0;
+
     // Формируем путь к изображению относительно сервера
     const imagePath = `/uploads/${req.file.filename}`;
     console.log('Путь к изображению:', imagePath);
@@ -159,9 +166,11 @@ const createProduct = async (req, res) => {
       price: Number(price),
       category,
       image: imagePath,
-      inStock: inStock === 'true',
-      infiniteStock: infiniteStock === 'true',
-      discount: discount ? Number(discount) : 0
+      inStock: isInStock,
+      infiniteStock: isInfiniteStock,
+      quantity: productQuantity,
+      discount: discount ? Number(discount) : 0,
+      specifications: specifications ? JSON.parse(specifications) : []
     });
 
     console.log('Сохранение продукта:', product);
@@ -182,7 +191,7 @@ const createProduct = async (req, res) => {
     console.error('Ошибка при создании продукта:', error);
     res.status(500).json({
       success: false,
-      message: 'Ошибка при создании продукта'
+      message: error.message || 'Ошибка при создании продукта'
     });
   }
 };
@@ -203,7 +212,9 @@ const updateProduct = async (req, res) => {
       category,
       inStock,
       infiniteStock,
-      discount
+      discount,
+      quantity,
+      specifications
     } = req.body;
 
     const updateData = {};
@@ -212,9 +223,27 @@ const updateProduct = async (req, res) => {
     if (description) updateData.description = description.trim();
     if (price) updateData.price = Number(price);
     if (category) updateData.category = category;
-    if (typeof inStock !== 'undefined') updateData.inStock = inStock === 'true';
-    if (typeof infiniteStock !== 'undefined') updateData.infiniteStock = infiniteStock === 'true';
-    if (typeof discount !== 'undefined') updateData.discount = Number(discount);
+    
+    // Обработка статуса наличия и количества
+    const isInfiniteStock = infiniteStock === 'true';
+    updateData.infiniteStock = isInfiniteStock;
+    
+    if (!isInfiniteStock) {
+      const productQuantity = parseInt(quantity) || 0;
+      updateData.quantity = Math.max(1, productQuantity); // Минимальное количество - 1
+      updateData.inStock = productQuantity > 0;
+    } else {
+      updateData.quantity = 0;
+      updateData.inStock = true;
+    }
+
+    if (typeof discount !== 'undefined') {
+      updateData.discount = Number(discount);
+    }
+
+    if (specifications) {
+      updateData.specifications = JSON.parse(specifications);
+    }
 
     // Если загружено новое изображение
     if (req.file) {
@@ -259,7 +288,7 @@ const updateProduct = async (req, res) => {
     console.error('Ошибка при обновлении продукта:', error);
     res.status(500).json({
       success: false,
-      message: 'Ошибка при обновлении продукта'
+      message: error.message || 'Ошибка при обновлении продукта'
     });
   }
 };

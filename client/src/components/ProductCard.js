@@ -25,7 +25,8 @@ const ProductCard = ({ product, onAddToCart }) => {
         originalPrice: price,
         discount,
         image,
-        quantity: 1
+        quantity: 1,
+        productId: _id
       });
     }
   };

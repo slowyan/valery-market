@@ -33,21 +33,24 @@ const CheckoutForm = ({ items, onSuccess, onCancel }) => {
     try {
       const orderData = {
         customerName: formData.customerName.trim(),
+        email: formData.email.trim(),
         phone: formData.phone.trim(),
-        ...(formData.email && { email: formData.email.trim() }),
         items: items.map(item => ({
           productId: item._id,
           quantity: item.quantity,
-          name: item.name,
           price: item.price
         })),
-        address: `${formData.city}, ${formData.street}, д. ${formData.house}${formData.apartment ? `, кв. ${formData.apartment}` : ''}, ${formData.postalCode}`,
-        totalAmount: items.reduce((sum, item) => {
-          const price = item.discount 
-            ? Math.round(item.price * (1 - item.discount / 100))
-            : item.price;
-          return sum + (price * item.quantity);
-        }, 0)
+        shippingAddress: {
+          customerName: formData.customerName.trim(),
+          email: formData.email.trim(),
+          city: formData.city.trim(),
+          street: formData.street.trim(),
+          house: formData.house.trim(),
+          apartment: formData.apartment.trim(),
+          postalCode: formData.postalCode.trim()
+        },
+        contactPhone: formData.phone.trim(),
+        totalAmount: items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
       };
 
       const response = await axios.post(
@@ -85,22 +88,14 @@ const CheckoutForm = ({ items, onSuccess, onCancel }) => {
               <span className="item-name">{item.name}</span>
               <span className="item-quantity">×{item.quantity}</span>
               <span className="item-price">
-                {item.discount
-                  ? Math.round(item.price * (1 - item.discount / 100)) * item.quantity
-                  : item.price * item.quantity
-                } ₽
+                {item.price * item.quantity} ₽
               </span>
             </div>
           ))}
           <div className="order-total">
             <strong>Итого:</strong>
             <strong>
-              {items.reduce((sum, item) => {
-                const price = item.discount 
-                  ? Math.round(item.price * (1 - item.discount / 100))
-                  : item.price;
-                return sum + (price * item.quantity);
-              }, 0)} ₽
+              {items.reduce((sum, item) => sum + (item.price * item.quantity), 0)} ₽
             </strong>
           </div>
         </div>
