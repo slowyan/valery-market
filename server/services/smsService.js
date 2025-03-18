@@ -1,5 +1,6 @@
 const axios = require('axios');
 const config = require('../config');
+const isDevelopment = process.env.NODE_ENV !== 'production';
 
 class SmsService {
   constructor() {
@@ -10,7 +11,7 @@ class SmsService {
   async sendVerificationCode(phone, code) {
     try {
       // В режиме разработки просто логируем код
-      if (!config.sms.enabled) {
+      if (isDevelopment) {
         console.log('==================================');
         console.log('🔐 КОД ПОДТВЕРЖДЕНИЯ');
         console.log('📱 Телефон:', phone);

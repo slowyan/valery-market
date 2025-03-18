@@ -3,7 +3,7 @@ require('dotenv').config();
 const development = {
     port: process.env.PORT || 5000,
     mongoUri: 'mongodb://localhost:27017/valery-market-dev',
-    jwtSecret: 'dev-secret-key',
+    jwtSecret: process.env.JWT_SECRET,
     // Добавьте здесь конфигурацию для SMS-сервиса
     sms: {
         enabled: true,

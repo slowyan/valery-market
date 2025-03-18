@@ -2,24 +2,37 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
 const userSchema = new mongoose.Schema({
-  email: {
+  phone: {
     type: String,
     required: true,
     unique: true,
+    trim: true
+  },
+  email: {
+    type: String,
     trim: true,
-    lowercase: true
+    lowercase: true,
+    validate: {
+      validator: function(v) {
+        if (!v) return true;
+        return /^\S+@\S+\.\S+$/.test(v);
+      },
+      message: 'Неверный формат email'
+    }
   },
   password: {
     type: String,
-    required: true
+    default: null
   },
   name: {
     type: String,
-    trim: true
+    trim: true,
+    default: null
   },
-  phone: {
+  role: {
     type: String,
-    trim: true
+    enum: ['user', 'admin'],
+    default: 'user'
   },
   isAdmin: {
     type: Boolean,
@@ -33,28 +46,46 @@ const userSchema = new mongoose.Schema({
 
 // Хеширование пароля перед сохранением
 userSchema.pre('save', async function(next) {
-  if (this.isModified('password')) {
-    this.password = await bcrypt.hash(this.password, 10);
+  const user = this;
+  
+  // Если пароль не был изменен или его нет, пропускаем
+  if (!user.isModified('password') || !user.password) {
+    return next();
   }
-  next();
+  
+  try {
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(user.password, salt);
+    next();
+  } catch (error) {
+    return next(error);
+  }
 });
 
 // Метод для сравнения паролей
 userSchema.methods.comparePassword = async function(candidatePassword) {
+  if (!this.password) return false;
   return bcrypt.compare(candidatePassword, this.password);
 };
 
 // Метод для получения публичных данных пользователя
 userSchema.methods.getPublicProfile = function() {
-  return {
-    id: this._id,
-    email: this.email,
-    name: this.name,
-    phone: this.phone,
-    isAdmin: this.isAdmin
-  };
+  const userObject = this.toObject();
+  delete userObject.password;
+  return userObject;
 };
 
-const User = mongoose.model('User', userSchema);
+// Удаляем все индексы перед созданием новых
+mongoose.connection.on('connected', async () => {
+  try {
+    await mongoose.connection.db.collection('users').dropIndexes();
+    console.log('Индексы коллекции users успешно удалены');
+  } catch (error) {
+    console.error('Ошибка при удалении индексов:', error);
+  }
+});
 
-module.exports = User; 
+// Создаем только индекс для телефона
+userSchema.index({ phone: 1 }, { unique: true });
+
+module.exports = mongoose.model('User', userSchema); 

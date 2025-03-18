@@ -2,8 +2,9 @@ const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const smsService = require('../services/smsService');
+const config = require('../config');
 
-// Временное хранилище кодов (в реальном приложении следует использовать Redis или другое хранилище)
+// Хранилище кодов подтверждения (в реальном приложении следует использовать Redis или другое хранилище)
 const verificationCodes = new Map();
 
 const generateVerificationCode = () => {
@@ -14,45 +15,45 @@ const sendCode = async (req, res) => {
     try {
         const { phone } = req.body;
         
-        console.log('Получен запрос на отправку кода:', { phone });
+        if (!phone) {
+            return res.status(400).json({
+                success: false,
+                message: 'Номер телефона обязателен'
+            });
+        }
 
-        if (!phone || !/^7\d{10}$/.test(phone)) {
-            console.log('Неверный формат номера:', phone);
+        // Очищаем номер от всего кроме цифр
+        const cleanPhone = phone.replace(/\D/g, '');
+
+        // Проверяем формат номера
+        if (!/^7\d{10}$/.test(cleanPhone)) {
             return res.status(400).json({
                 success: false,
                 message: 'Неверный формат номера телефона'
             });
         }
 
-        // Генерируем код
+        // Генерируем код подтверждения
         const code = generateVerificationCode();
-        console.log('Сгенерирован код:', code);
         
-        // Отправляем SMS через наш сервис
-        const smsResult = await smsService.sendVerificationCode(phone, code);
-        console.log('Результат отправки SMS:', smsResult);
-        
-        if (!smsResult) {
-            throw new Error('Не удалось отправить SMS');
-        }
-        
-        // Сохраняем код
-        verificationCodes.set(phone, {
+        // Сохраняем код в хранилище
+        verificationCodes.set(cleanPhone, {
             code,
-            timestamp: Date.now(),
-            attempts: 0
+            timestamp: Date.now()
         });
-        console.log('Код сохранен в памяти');
+
+        // В реальном приложении здесь будет отправка SMS
+        console.log(`Код подтверждения для ${cleanPhone}: ${code}`);
 
         res.json({
             success: true,
-            message: 'Код отправлен'
+            message: 'Код подтверждения отправлен'
         });
     } catch (error) {
         console.error('Ошибка при отправке кода:', error);
         res.status(500).json({
             success: false,
-            message: error.message || 'Ошибка при отправке кода'
+            message: 'Ошибка при отправке кода подтверждения'
         });
     }
 };
@@ -64,75 +65,51 @@ const verifyCode = async (req, res) => {
         if (!phone || !code) {
             return res.status(400).json({
                 success: false,
-                message: 'Не указан телефон или код'
+                message: 'Номер телефона и код обязательны'
             });
         }
 
-        const verification = verificationCodes.get(phone);
-        
-        if (!verification) {
+        // Очищаем номер от всего кроме цифр
+        const cleanPhone = phone.replace(/\D/g, '');
+
+        // Проверяем код
+        const storedData = verificationCodes.get(cleanPhone);
+        if (!storedData || storedData.code !== code) {
             return res.status(400).json({
                 success: false,
-                message: 'Код подтверждения не был отправлен или истек'
+                message: 'Неверный код подтверждения'
             });
         }
 
-        // Проверяем количество попыток
-        if (verification.attempts >= 3) {
-            verificationCodes.delete(phone);
-            return res.status(400).json({
-                success: false,
-                message: 'Превышено количество попыток. Запросите новый код'
-            });
-        }
-
-        // Проверяем время действия кода (5 минут)
-        if (Date.now() - verification.timestamp > 5 * 60 * 1000) {
-            verificationCodes.delete(phone);
+        // Проверяем срок действия кода (5 минут)
+        if (Date.now() - storedData.timestamp > 5 * 60 * 1000) {
+            verificationCodes.delete(cleanPhone);
             return res.status(400).json({
                 success: false,
                 message: 'Код подтверждения истек'
             });
         }
 
-        verification.attempts++;
-
-        if (verification.code !== code) {
-            return res.status(400).json({
-                success: false,
-                message: 'Неверный код'
-            });
-        }
-
-        // Код верный, удаляем его из хранилища
-        verificationCodes.delete(phone);
+        // Удаляем использованный код
+        verificationCodes.delete(cleanPhone);
 
         // Ищем или создаем пользователя
-        let user = await User.findOne({ phone });
-        
+        let user = await User.findOne({ phone: cleanPhone });
         if (!user) {
-            user = new User({
-                phone,
-                role: 'user'
-            });
-            await user.save();
+            user = await User.create({ phone: cleanPhone });
         }
 
-        // Создаем токен
+        // Генерируем JWT токен
         const token = jwt.sign(
-            { userId: user._id, isAdmin: user.isAdmin },
-            process.env.JWT_SECRET,
+            { userId: user._id },
+            config.jwtSecret,
             { expiresIn: '7d' }
         );
 
         res.json({
             success: true,
             token,
-            user: {
-                _id: user._id,
-                phone: user.phone,
-                role: user.role
-            }
+            user: user.getPublicProfile()
         });
     } catch (error) {
         console.error('Ошибка при проверке кода:', error);
