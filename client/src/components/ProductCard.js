@@ -3,6 +3,7 @@ import { formatPrice } from '../utils/format';
 import config from '../config';
 import '../styles/catalog.css';
 import placeholderImage from '../assets/i.webp';
+import { getImageUrl } from '../utils/helpers';
 
 const ProductCard = ({ product, onAddToCart }) => {
   const { _id, name, description, price, image, inStock, specifications, discount } = product;
@@ -38,11 +39,11 @@ const ProductCard = ({ product, onAddToCart }) => {
       )}
       <div className="product-image">
         <img 
-          src={imageUrl} 
+          src={getImageUrl(image)} 
           alt={name}
           onError={(e) => {
             e.target.onerror = null;
-            e.target.src = placeholderImage;
+            e.target.src = '/uploads/placeholder.jpg';
           }}
         />
       </div>
