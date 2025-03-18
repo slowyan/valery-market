@@ -7,7 +7,9 @@ const CategoryCard = ({ category }) => {
   const { _id, name, image, description } = category;
 
   // Формируем полный путь к изображению
-  const imageUrl = image ? `${config.uploadsUrl}/${image}` : '/placeholder.jpg';
+  const imageUrl = image 
+    ? `${config.baseUrl}${image}` // image уже содержит /uploads/
+    : '/placeholder.jpg';
   
   // Отладочная информация
   console.log('Config:', config);
