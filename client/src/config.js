@@ -11,5 +11,11 @@ const config = {
   }
 };
 
-const environment = process.env.NODE_ENV || 'development';
+// Определяем окружение на основе текущего URL
+const isProduction = window.location.hostname !== 'localhost';
+const environment = isProduction ? 'production' : 'development';
+
+console.log('Current environment:', environment);
+console.log('Current config:', config[environment]);
+
 export default config[environment]; 

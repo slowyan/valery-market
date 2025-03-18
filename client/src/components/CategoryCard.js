@@ -8,10 +8,13 @@ const CategoryCard = ({ category }) => {
 
   // Формируем полный путь к изображению
   const imageUrl = image 
-    ? (image.startsWith('http') ? image : `${config.baseUrl}${image}`)
+    ? (image.startsWith('http') 
+        ? image 
+        : `${config.baseUrl}${image.startsWith('/') ? '' : '/'}${image}`)
     : `${config.baseUrl}/uploads/placeholder.jpg`;
   
   // Отладочная информация
+  console.log('Category:', category);
   console.log('Config:', config);
   console.log('Image path:', image);
   console.log('Full image URL:', imageUrl);
