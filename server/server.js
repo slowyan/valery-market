@@ -2,9 +2,25 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
 require('dotenv').config();
 
 const app = express();
+
+// Создаем папку uploads если её нет
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+  console.log('Created uploads directory');
+}
+
+// Копируем placeholder если его нет
+const placeholderSrc = path.join(__dirname, 'assets', 'placeholder.jpg');
+const placeholderDest = path.join(uploadsDir, 'placeholder.jpg');
+if (!fs.existsSync(placeholderDest) && fs.existsSync(placeholderSrc)) {
+  fs.copyFileSync(placeholderSrc, placeholderDest);
+  console.log('Copied placeholder image');
+}
 
 // Middleware
 app.use(cors());

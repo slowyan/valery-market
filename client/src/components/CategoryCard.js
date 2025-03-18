@@ -8,8 +8,8 @@ const CategoryCard = ({ category }) => {
 
   // Формируем полный путь к изображению
   const imageUrl = image 
-    ? `${config.baseUrl}${image}` // image уже содержит /uploads/
-    : '/placeholder.jpg';
+    ? (image.startsWith('http') ? image : `${config.baseUrl}${image}`)
+    : `${config.baseUrl}/uploads/placeholder.jpg`;
   
   // Отладочная информация
   console.log('Config:', config);
@@ -23,8 +23,8 @@ const CategoryCard = ({ category }) => {
           src={imageUrl} 
           alt={name} 
           onError={(e) => {
-            console.log('Image load error:', e.target.src);
-            e.target.src = '/placeholder.jpg';
+            console.log('Image load error for:', e.target.src);
+            e.target.src = `${config.baseUrl}/uploads/placeholder.jpg`;
             e.target.onerror = null;
           }} 
         />
