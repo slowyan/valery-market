@@ -134,7 +134,7 @@ const createProduct = async (req, res) => {
       quantity,
       specifications
     } = req.body;
-
+    
     // Проверяем обязательные поля
     if (!name || !price || !category) {
       return res.status(400).json({
@@ -176,7 +176,7 @@ const createProduct = async (req, res) => {
     console.log('Сохранение продукта:', product);
 
     await product.save();
-
+    
     const populatedProduct = await Product.findById(product._id)
       .populate('category');
 
@@ -269,7 +269,7 @@ const updateProduct = async (req, res) => {
       updateData,
       { new: true, runValidators: true }
     ).populate('category');
-
+    
     if (!product) {
       return res.status(404).json({
         success: false,

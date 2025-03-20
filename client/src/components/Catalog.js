@@ -144,7 +144,7 @@ const Catalog = () => {
     let filtered = products;
 
     if (selectedCategory) {
-      filtered = filtered.filter(product => product.category === selectedCategory);
+      filtered = filtered.filter(product => product.category?._id === selectedCategory);
     }
 
     if (searchQuery) {
