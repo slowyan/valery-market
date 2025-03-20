@@ -14,7 +14,7 @@ const ProductForm = ({ onSubmit, onCancel, initialData }) => {
     infiniteStock: false,
     discount: 0,
     specifications: [],
-    quantity: 0
+    quantity: 1
   });
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -302,7 +302,7 @@ const ProductForm = ({ onSubmit, onCancel, initialData }) => {
           value={formData.price}
           onChange={handleChange}
           min="0"
-          step="0.01"
+          step="1"
           required
         />
       </div>
