@@ -225,6 +225,7 @@ h1 {
 @media (max-width: 768px) {
 	.catalog-container {
 		padding: 16px;
+		margin-top: auto;
 	}
 
 	.catalog-filters {
@@ -616,15 +617,14 @@ h1 {
 }
 
 .scroll-button.left {
-	left: 10px;
+	left:  0px;
 }
 
 .scroll-button.right {
-	right: 10px;
+	right: 0px;
 }
 
 .scroll-button i {
-	font-size: 20px;
 	color: #2c3e50;
 }
 
@@ -633,7 +633,7 @@ h1 {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
 	gap: 20px;
-	padding: 20px;
+	padding: 0px;
 	transition: opacity 0.3s ease;
 }
 
@@ -675,9 +675,15 @@ h1 {
 		object-fit: cover;
 	}
 	
-	
+	.scroll-button {
+		position: absolute;
+		width: 30px;
+		height: 30px;
+	}
+
 	.products-grid {
 		display: grid;
+		padding: 0;
 		grid-template-columns: 1fr 1fr;
 	}
 
