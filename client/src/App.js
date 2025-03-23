@@ -12,6 +12,7 @@ import OrderSuccess from './pages/OrderSuccess';
 import AdminPanel from './components/AdminPanel';
 import AdminLogin from './components/AdminLogin';
 import PublicOffer from './pages/PublicOffer';
+import Contract from './pages/Contract';
 import './styles/main.css';
 
 const theme = createTheme({
@@ -65,6 +66,8 @@ function App() {
                   </ProtectedRoute>
                 } />
                 <Route path="/публичная-оферта" element={<PublicOffer />} />
+                <Route path="/договор" element={<Contract />} />
+                <Route path="/contract" element={<Contract />} />
               </Routes>
             </Box>
             <Footer />

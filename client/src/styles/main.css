@@ -213,8 +213,8 @@ ul.dropdown {
 .about {
     background: #E9EEF2;
     padding: 34px 70px;
-    font-size: 24.5px;
-    line-height: 33.5px;
+    font-size: 1.2rem;
+    line-height: 1.5;
     border-radius: 20px;
     margin: 40px 70px 0;
     max-width: 1400px;
@@ -223,33 +223,33 @@ ul.dropdown {
 }
 
 .about p {
-    margin-bottom: 30px;
+    margin-bottom: 8px;
 }
 
-.prices {
-    padding: 34px 70px;
+.infoblock {
+    padding: 34px 70px 0;
     margin: 0 auto;
     max-width: 1400px;
 }
 
-.prices h2 {
+.infoblock h2 {
     font-size: 24.5px;
     font-weight: bold;
     margin-bottom: 30px;
 }
 
-.prices p {
-    font-size: 24.5px;
-    line-height: 33.5px;
+.infoblock p {
+    font-size: 1.2rem;
+    line-height: 1.5;
     margin-bottom: 20px;
 }
 
-.prices a {
+.infoblock a {
     color: #0066CC;
     text-decoration: none;
 }
 
-.prices a:hover {
+.infoblock a:hover {
     text-decoration: underline;
 }
 
@@ -307,7 +307,7 @@ ul.dropdown {
     margin-bottom: 2rem;
 }
 
-.prices-link {
+.infoblock-link {
     display: inline-block;
     padding: 5px 10px;
     background: #96CCFF;
@@ -316,9 +316,30 @@ ul.dropdown {
     border-radius: 4px;
 }
 
-.prices-link:hover {
+.infoblock-link:hover {
     opacity: 0.86;
     text-decoration: none;
+}
+
+.infoblock-image {
+    height: 340px;
+
+}
+
+.infoblock-image img{
+    height: 100%;
+    object-fit: cover;
+    padding-right: 40px;
+}
+
+.infoblock-moscow-text p{
+    text-align: right;
+    padding-right: 40px;
+    line-height: 1.5;
+}
+.infoblock-moscow {
+    display: flex;
+    flex-direction: row-reverse;
 }
 
 @media (max-width: 576px) {
@@ -402,17 +423,51 @@ ul.dropdown {
         padding-left: 20px;
     }
 
-    .about, .prices {
+    .about, .infoblock {
         padding: 21px 37px;
-        margin: 20px auto;
         font-size: 16px;
         line-height: 30px;
         border-radius: 15px;
-        max-width: calc(100% - 40px);
+        max-width: 100%;
     }
 
-    .prices h2 {
+    .about p {
+        margin-bottom: 0;
+    }
+
+    .infoblock p {
         font-size: 16px;
+        line-height: 30px;
+        margin-bottom: 0;
+        margin-top: 10px;
+    }
+
+    .infoblock h2 {
+        font-size: 16px;
+        margin-bottom: 0;
+    }
+
+    .infoblock-moscow {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    .infoblock-moscow-text p {
+        text-align: left;
+        padding-right: 0px;
+    }
+    .infoblock-image img {
+        height: 80%;
+        width: 100%;
+        object-fit: cover;
+        padding: 0;
+        padding-top: 10px;
+    }
+
+
+    .infoblock-link {
+        font-size: 16px;
+        padding: 3px 5px;
     }
 
     .logo-image {

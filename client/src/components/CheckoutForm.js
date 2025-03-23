@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import config from '../config';
 import '../styles/CheckoutForm.css';
+import { Link } from 'react-router-dom';
 
 const CheckoutForm = ({ items, onSuccess, onCancel }) => {
   const [formData, setFormData] = useState({
@@ -12,7 +13,8 @@ const CheckoutForm = ({ items, onSuccess, onCancel }) => {
     street: '',
     house: '',
     apartment: '',
-    postalCode: ''
+    postalCode: '',
+    isAgree: true,
   });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
@@ -223,7 +225,7 @@ const CheckoutForm = ({ items, onSuccess, onCancel }) => {
           <h3>Адрес доставки</h3>
 
           <div className="form-group">
-            <label htmlFor="city">Город*</label>
+            <label htmlFor="city">Населенный пункт*</label>
             <input
               type="text"
               id="city"
@@ -285,7 +287,11 @@ const CheckoutForm = ({ items, onSuccess, onCancel }) => {
             />
             {errors.postalCode && <div className="field-error">{errors.postalCode}</div>}
           </div>
-
+          <div>
+            <input type="checkbox" name="isAgree" value="true" checked="false|true"/>
+            <label htmlFor="isAgree">Я согласен с условиями <Link to="/публичная-оферта" target="_blank">публичной оферты</Link></label>
+            {errors.isAgree && <div className="field-error">{errors.isAgree}</div>}
+          </div>
           <div className="form-actions">
             <button type="button" onClick={onCancel} className="cancel-button">
               Отмена

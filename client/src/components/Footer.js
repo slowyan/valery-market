@@ -31,14 +31,17 @@ const Footer = () => {
       component="footer" 
       sx={{ 
         background: 'rgba(0, 0, 0, 0.05)',
-        py: { xs: 2.5, md: 5 },
-        px: { xs: 2.5, md: 8.75 }
+        py: { xs: 2, md: 5 },
+        px: { xs: 1, md: 8.75 },
       }}
     >
       <Container maxWidth="lg">
         <Grid container spacing={4}>
           <Grid item xs={12} md={6}>
-            <Box sx={{ mb: { xs: 3, md: 0 } }}>
+            <Box sx={{ 
+              mb: { xs: 2, md: 0 }, 
+              px: { xs: 0, md: 8.75 }
+            }}>
               <Typography variant="body1" sx={{ mb: 1, fontSize: '20px', lineHeight: '27px' }}>
                 © 2000-{currentYear} valery-pools
               </Typography>
@@ -63,7 +66,7 @@ const Footer = () => {
               <Box sx={{ 
                 display: 'flex', 
                 gap: 2,
-                mt: 2
+                mt: 2,
               }}>
                 <a href="https://wa.me/+79030008554" target="_blank" rel="noopener noreferrer">
                   <img 
@@ -110,7 +113,7 @@ const Footer = () => {
                         to={`/${link.toLowerCase().replace(/\s+/g, '-')}`} 
                         className="nav-link"
                         style={{ 
-                          fontSize: '20px',
+                          fontSize: '18px',
                           textDecoration: 'none',
                           color: 'black',
                           lineHeight: '27px'
