@@ -11,6 +11,7 @@ import Checkout from './pages/Checkout';
 import OrderSuccess from './pages/OrderSuccess';
 import AdminPanel from './components/AdminPanel';
 import AdminLogin from './components/AdminLogin';
+import PublicOffer from './pages/PublicOffer';
 import './styles/main.css';
 
 const theme = createTheme({
@@ -63,6 +64,7 @@ function App() {
                     <AdminPanel />
                   </ProtectedRoute>
                 } />
+                <Route path="/публичная-оферта" element={<PublicOffer />} />
               </Routes>
             </Box>
             <Footer />

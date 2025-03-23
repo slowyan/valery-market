@@ -21,8 +21,10 @@ const Footer = () => {
     'О себе',
     'Расценки',
     'Смета',
-    'Договор'
+    'Договор',
+    'Публичная оферта'
   ];
+
 
   return (
     <Box 
@@ -38,7 +40,7 @@ const Footer = () => {
           <Grid item xs={12} md={6}>
             <Box sx={{ mb: { xs: 3, md: 0 } }}>
               <Typography variant="body1" sx={{ mb: 1, fontSize: '20px', lineHeight: '27px' }}>
-                © 2000-{currentYear} Valery-pools
+                © 2000-{currentYear} valery-pools
               </Typography>
               <Typography variant="body1" sx={{ mb: 1, fontSize: '20px', lineHeight: '27px' }}>
                 Строительство и ремонт бассейнов
@@ -55,7 +57,7 @@ const Footer = () => {
                   <span className="email-info">valery-pools@yandex.ru</span>
                 </Typography>
                 <Typography variant="body1" sx={{ fontSize: '20px', lineHeight: '27px' }}>
-                  <span className="tel-info">Тел. 8(903)000-85-54</span>
+                  <span className="tel-info">Тел. 8 (903) 000-85-54</span>
                 </Typography>
               </Box>
               <Box sx={{ 
