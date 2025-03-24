@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import config from '../config';
 import '../styles/CheckoutForm.css';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const CheckoutForm = ({ items, onSuccess, onCancel }) => {
   const [formData, setFormData] = useState({
@@ -19,6 +19,7 @@ const CheckoutForm = ({ items, onSuccess, onCancel }) => {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   const validatePostalCode = (code) => {
     const postalCodeRegex = /^\d{6}$/;
@@ -94,21 +95,6 @@ const CheckoutForm = ({ items, onSuccess, onCancel }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Проверяем валидацию перед отправкой
-    const validationErrors = {};
-    if (!validatePhone(formData.phone)) {
-      validationErrors.phone = 'Введите корректный номер телефона';
-    }
-    if (!validatePostalCode(formData.postalCode)) {
-      validationErrors.postalCode = 'Индекс должен состоять из 6 цифр';
-    }
-
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      return;
-    }
-
     setLoading(true);
     setError(null);
 
@@ -145,10 +131,19 @@ const CheckoutForm = ({ items, onSuccess, onCancel }) => {
         }
       );
 
-      if (response.data) {
-        onSuccess(response.data);
-      } else {
-        throw new Error('Не удалось создать заказ');
+      if (response.data.success) {
+        // Если есть URL для оплаты, перенаправляем пользователя
+        if (response.data.paymentUrl) {
+          // Сохраняем ID заказа в localStorage для последующей проверки
+          localStorage.setItem('pendingOrderId', response.data.order._id);
+          // Перенаправляем на страницу оплаты
+          window.location.href = response.data.paymentUrl;
+        } else if (response.data.paymentError) {
+          // Если есть ошибка оплаты, показываем её
+          setError(response.data.paymentError);
+          // Перенаправляем на страницу заказа
+          navigate(`/orders/${response.data.order._id}`);
+        }
       }
     } catch (err) {
       console.error('Ошибка при оформлении заказа:', err);

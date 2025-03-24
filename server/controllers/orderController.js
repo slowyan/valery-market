@@ -1,12 +1,20 @@
 const Order = require('../models/Order');
 const Product = require('../models/Product');
 const jwt = require('jsonwebtoken');
+const YooKassa = require('yookassa');
+const { v4: uuidv4 } = require('uuid');
+
+// Инициализация клиента ЮKassa
+const yooKassa = new YooKassa({
+  shopId: process.env.YOOKASSA_SHOP_ID || '123456',
+  secretKey: process.env.YOOKASSA_SECRET_KEY || 'test_RvNKVamCJu1tErIO0v6MJyTXsRqTtBfhkDTMO8iMiNM'
+});
 
 const orderController = {
   // Получение всех заказов (для админа)
   getAllOrders: async (req, res) => {
     try {
-      const orders = await Order.find()
+      const orders = await Order.find({ paymentStatus: 'succeeded' })
         .populate({
           path: 'items.product',
           select: 'name price image quantity inStock infiniteStock'
@@ -65,6 +73,7 @@ const orderController = {
         });
       }
 
+      // Получаем userId из токена
       let userId = null;
       const authHeader = req.headers.authorization;
       if (authHeader) {
@@ -74,10 +83,7 @@ const orderController = {
           userId = decoded.userId;
         } catch (error) {
           console.log('Ошибка при проверке токена:', error);
-          return res.status(401).json({
-            success: false,
-            message: 'Недействительный токен авторизации'
-          });
+          // Продолжаем без userId для неавторизованных пользователей
         }
       }
 
@@ -120,15 +126,53 @@ const orderController = {
         address: `${shippingAddress.city}, ${shippingAddress.street}, д. ${shippingAddress.house}${shippingAddress.apartment ? `, кв. ${shippingAddress.apartment}` : ''}, ${shippingAddress.postalCode}`,
         items: formattedItems,
         totalAmount,
-        status: 'new'
+        userId: userId,
+        status: 'new',
+        paymentStatus: 'pending'
       });
 
       await order.save();
 
-      res.status(201).json({
-        success: true,
-        order
-      });
+      // Создаем платеж в ЮKassa
+      try {
+        const idempotenceKey = uuidv4();
+        const payment = await yooKassa.createPayment({
+          amount: {
+            value: order.totalAmount.toFixed(2),
+            currency: 'RUB'
+          },
+          confirmation: {
+            type: 'redirect',
+            return_url: `${process.env.CLIENT_URL || 'http://localhost:3000'}/payment-success`
+          },
+          capture: true,
+          description: `Заказ №${order._id}`,
+          metadata: {
+            orderId: order._id.toString()
+          }
+        }, idempotenceKey);
+
+        // Обновляем заказ с информацией о платеже
+        order.paymentId = payment.id;
+        order.paymentStatus = 'succeeded';
+        await order.save();
+
+        // Возвращаем URL для оплаты
+        res.status(201).json({
+          success: true,
+          order,
+          paymentUrl: payment.confirmation.confirmation_url
+        });
+      } catch (paymentError) {
+        console.error('Ошибка при создании платежа:', paymentError);
+        
+        // Если произошла ошибка при создании платежа, все равно возвращаем информацию о заказе
+        res.status(201).json({
+          success: true,
+          order,
+          paymentError: 'Не удалось создать платеж. Пожалуйста, попробуйте оплатить позже.'
+        });
+      }
     } catch (error) {
       console.error('Ошибка при создании заказа:', error);
       res.status(500).json({
@@ -201,6 +245,26 @@ const orderController = {
         });
       }
 
+      // Если есть ID платежа, проверяем его статус
+      if (order.paymentId) {
+        try {
+          const payment = await yooKassa.getPayment(order.paymentId);
+          
+          // Обновляем статус оплаты в заказе
+          if (payment.status === 'succeeded' && order.paymentStatus !== 'succeeded') {
+            order.paymentStatus = 'succeeded';
+            order.status = 'processing'; // Меняем статус заказа на "в обработке"
+            await order.save();
+          } else if (payment.status === 'canceled' && order.paymentStatus !== 'cancelled') {
+            order.paymentStatus = 'cancelled';
+            order.status = 'cancelled';
+            await order.save();
+          }
+        } catch (paymentError) {
+          console.error('Ошибка при проверке статуса платежа:', paymentError);
+        }
+      }
+
       res.json({
         success: true,
         order
@@ -229,7 +293,7 @@ const orderController = {
         });
       }
 
-      if (order.status !== 'pending') {
+      if (order.status !== 'new') {
         return res.status(400).json({ 
           success: false,
           message: 'Заказ нельзя отменить' 

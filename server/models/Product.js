@@ -36,12 +36,12 @@ const productSchema = new mongoose.Schema({
   quantity: {
     type: Number,
     default: 0,
-    min: [1, 'Минимальное количество товара - 1 штука'],
+    min: [0, 'Минимальное количество товара - 1 штука'],
     validate: {
       validator: function(v) {
         // Если товар не в бесконечном количестве, проверяем минимальное значение
         if (!this.infiniteStock) {
-          return v >= 1;
+          return v >= 0;
         }
         return true;
       },

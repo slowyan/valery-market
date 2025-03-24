@@ -9,6 +9,7 @@ const orderRoutes = require('./routes/orderRoutes');
 const productRoutes = require('./routes/productRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
 const authRoutes = require('./routes/authRoutes');
+const paymentRoutes = require('./routes/payment');
 
 const app = express();
 
@@ -34,11 +35,12 @@ app.use((req, res, next) => {
 });
 
 // Маршруты
+app.use('/api/payment', paymentRoutes);
+app.use('/api/user', userRoutes);
+app.use('/api/orders', orderRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/auth', authRoutes);
-app.use('/api/orders', orderRoutes);
-app.use('/api/user', userRoutes);
 
 // Обработка ошибок
 app.use((err, req, res, next) => {
@@ -61,7 +63,7 @@ const mongooseOptions = {
 // Подключение к MongoDB с обработкой ошибок и переподключением
 const connectDB = async () => {
   try {
-    const conn = await mongoose.connect(config.mongoUri, mongooseOptions);
+    const conn = await mongoose.connect(process.env.MONGODB_URI, mongooseOptions);
     console.log('Connected to MongoDB:', conn.connection.host);
   } catch (error) {
     console.error('MongoDB connection error:', error);
@@ -84,10 +86,11 @@ mongoose.connection.on('disconnected', () => {
 connectDB();
 
 // Запуск сервера
-const server = app.listen(config.port, () => {
-  console.log(`Server is running on port ${config.port}`);
+const PORT = process.env.PORT || 5000;
+const server = app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
   console.log('Environment:', process.env.NODE_ENV);
-  console.log('MongoDB URI:', config.mongoUri);
+  console.log('MongoDB URI:', process.env.MONGODB_URI);
 });
 
 // Graceful shutdown

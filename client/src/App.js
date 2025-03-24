@@ -13,6 +13,7 @@ import AdminPanel from './components/AdminPanel';
 import AdminLogin from './components/AdminLogin';
 import PublicOffer from './pages/PublicOffer';
 import Contract from './pages/Contract';
+import PaymentSuccess from './pages/PaymentSuccess';
 import './styles/main.css';
 
 const theme = createTheme({
@@ -68,6 +69,7 @@ function App() {
                 <Route path="/публичная-оферта" element={<PublicOffer />} />
                 <Route path="/договор" element={<Contract />} />
                 <Route path="/contract" element={<Contract />} />
+                <Route path="/orders/:orderId/success" element={<PaymentSuccess />} />
               </Routes>
             </Box>
             <Footer />
