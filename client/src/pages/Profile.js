@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import UserOrders from '../components/UserOrders';
 import '../styles/Profile.css';
 
 const Profile = () => {
@@ -236,6 +237,10 @@ const Profile = () => {
                         </div>
                     </div>
                 )}
+            </div>
+
+            <div className="profile-card orders-section">
+                <UserOrders />
             </div>
         </div>
     );

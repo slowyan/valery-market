@@ -14,7 +14,7 @@ const orderController = {
   // Получение всех заказов (для админа)
   getAllOrders: async (req, res) => {
     try {
-      const orders = await Order.find({ paymentStatus: 'succeeded' })
+      const orders = await Order.find({ /*paymentStatus: 'succeeded' */ })
         .populate({
           path: 'items.product',
           select: 'name price image quantity inStock infiniteStock'
@@ -143,7 +143,7 @@ const orderController = {
           },
           confirmation: {
             type: 'redirect',
-            return_url: `${process.env.CLIENT_URL}/payment-success`
+            return_url: `${process.env.CLIENT_URL}/payment-success?orderId=${order._id}`
           },
           capture: true,
           description: `Заказ №${order._id}`,
@@ -185,11 +185,25 @@ const orderController = {
   getUserOrders: async (req, res) => {
     try {
       const orders = await Order.find({ userId: req.user._id })
+        .populate({
+          path: 'items.product',
+          select: 'name price image'
+        })
         .sort({ createdAt: -1 });
 
       res.json({
         success: true,
-        orders
+        orders: orders.map(order => ({
+          ...order.toObject(),
+          createdAt: order.createdAt,
+          formattedDate: new Date(order.createdAt).toLocaleString('ru-RU', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          })
+        }))
       });
     } catch (error) {
       console.error('Ошибка при получении заказов пользователя:', error);
