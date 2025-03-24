@@ -143,7 +143,7 @@ const orderController = {
           },
           confirmation: {
             type: 'redirect',
-            return_url: `${process.env.CLIENT_URL || 'http://localhost:3000'}/payment-success`
+            return_url: `${process.env.CLIENT_URL}/orders/${order._id}/success`
           },
           capture: true,
           description: `Заказ №${order._id}`,
@@ -154,7 +154,6 @@ const orderController = {
 
         // Обновляем заказ с информацией о платеже
         order.paymentId = payment.id;
-        order.paymentStatus = 'succeeded';
         await order.save();
 
         // Возвращаем URL для оплаты
