@@ -4,7 +4,7 @@ const bcrypt = require('bcryptjs');
 const smsService = require('../services/smsService');
 const config = require('../config');
 
-// Хранилище кодов подтверждения (в реальном приложении следует использовать Redis или другое хранилище)
+// Хранилище кодов подтверждения (потом следует использовать Redis или другое хранилище)
 const verificationCodes = new Map();
 
 const generateVerificationCode = () => {
@@ -42,8 +42,7 @@ const sendCode = async (req, res) => {
             timestamp: Date.now()
         });
 
-        // В реальном приложении здесь будет отправка SMS
-        console.log(`Код подтверждения для ${cleanPhone}: ${code}`);
+        smsService.sendVerificationCode(cleanPhone, code);
 
         res.json({
             success: true,
