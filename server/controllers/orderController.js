@@ -143,7 +143,8 @@ const orderController = {
           },
           confirmation: {
             type: 'redirect',
-            return_url: `${process.env.CLIENT_URL}/payment-success?orderId=${order._id}`
+            /*return_url: `${process.env.CLIENT_URL}/payment-success?orderId=${order._id}`*/
+            return_url: `${process.env.CLIENT_URL}/order-success`
           },
           capture: true,
           description: `Заказ №${order._id}`,
