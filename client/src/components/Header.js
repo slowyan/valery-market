@@ -63,16 +63,16 @@ const Header = () => {
               <li className="menu-container">
                 <a href="#" className="navlinks">Наши услуги <span className="arrow">▼</span></a>
                 <ul className="dropdown">
-                  <li><a href="#" className="navlinks">Оштукатуривание</a></li>
+                  <li><a href="https://valery-pools.ru/plastering.php" className="navlinks">Оштукатуривание</a></li>
                   <li><a href="#" className="navlinks">Укладка мозаики</a></li>
-                  <li><a href="#" className="navlinks">Сварка плёнки</a></li>
-                  <li><a href="#" className="navlinks">Гидроизоляция</a></li>
-                  <li><a href="#" className="navlinks">Установка закладных</a></li>
-                  <li><a href="#" className="navlinks">Монтаж оборудования</a></li>
-                  <li><a href="#" className="navlinks">Переливные лотки</a></li>
+                  <li><a href="https://valery-pools.ru/film_coating_pool.php" className="navlinks">Сварка плёнки</a></li>
+                  <li><a href="https://valery-pools.ru/hydroinsulation.php" className="navlinks">Гидроизоляция</a></li>
+                  <li><a href="https://valery-pools.ru/zakladnaya.php" className="navlinks">Установка закладных</a></li>
+                  <li><a href="https://valery-pools.ru/montage.php" className="navlinks">Монтаж оборудования</a></li>
+                  <li><a href="https://valery-pools.ru/overflow_tunnels.php" className="navlinks">Переливные лотки</a></li>
                   <li><a href="#" className="navlinks">Обслуживание</a></li>
                   <li><a href="#" className="navlinks">Реконструкция</a></li>
-                  <li><a href="#" className="navlinks">Ремонт</a></li>
+                  <li><a href="https://valery-pools.ru/pool_repair.php" className="navlinks">Ремонт</a></li>
                 </ul>
               </li>
               <li><Link to="/portfolio" className="navlinks">Наши работы</Link></li>
