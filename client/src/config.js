@@ -4,8 +4,8 @@ const config = {
     baseUrl: 'http://localhost:5000'
   },
   production: {
-    apiUrl: 'https://22000e1ac334.vps.myjino.ru/api',
-    baseUrl: 'https://22000e1ac334.vps.myjino.ru'
+    apiUrl: 'https://valery-pools.shop/api',
+    baseUrl: 'https://valery-pools.shop'
   }
 };
 

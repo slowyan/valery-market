@@ -75,8 +75,8 @@ const Header = () => {
                   <li><a href="https://valery-pools.ru/pool_repair.php" className="navlinks">Ремонт</a></li>
                 </ul>
               </li>
-              <li><Link to="/portfolio" className="navlinks">Наши работы</Link></li>
-              <li><Link to="/contract" className="navlinks">Договор</Link></li>
+              <li><Link to="/pay" className="navlinks">Оплата и доставка</Link></li>
+              <li><Link to="/about" className="navlinks">О нас</Link></li>
             </ul>
           </nav>
         </div>
