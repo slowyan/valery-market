@@ -833,7 +833,10 @@ h1 {
 		gap: 12px;
 		padding: 0;
 	}
-
+	.catalog-filters {
+		gap: 10px;
+		margin-bottom: 0px;
+	}
 	.catalog-category-card {
 		flex: 0 0 160px;
 	}
@@ -886,7 +889,10 @@ h1 {
 	}
 
 	.add-to-cart-button {
-		padding: 8px 6px;
+		background-color: #3A87EF;
+		border: 1px solid #1667EB;
+		color: white;
+		padding: 8px 12px;
 		font-size: 12px;
 		margin: 0;
 	}
@@ -899,6 +905,13 @@ h1 {
 		background-repeat: no-repeat;
 		background-position: left;
 		padding-left: 26px;
+	}
+	.search-input:focus {
+		border-color: #1667EB;
+	}
+	.product-badge {
+		border-radius: 20px;
+		padding: 4px 12px;
 	}
 }
 *::placeholder {
