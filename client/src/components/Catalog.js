@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import ProductCard from './ProductCard';
 import Cart from './Cart';
 import CheckoutForm from './CheckoutForm';
-import '../styles/catalog.css';
 import axios from 'axios';
 import config from '../config';
 import '../styles/catalog.css';
@@ -65,10 +64,6 @@ const Catalog = () => {
         behavior: 'smooth'
       });
     }
-  };
-
-  const handleSearch = (event) => {
-    // Реализация поиска
   };
 
   const handlePriceChange = (event) => {
@@ -273,7 +268,6 @@ const Catalog = () => {
                 />
                 <div className="catalog-category-content">
                   <h3 className="catalog-category-name">{category.name}</h3>
-                  <p className="catalog-category-description">{category.description}</p>
                 </div>
               </div>
             ))}
